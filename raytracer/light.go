@@ -85,5 +85,21 @@ func calculateTotalLight(scene *Scene, intersection IntersectionTriangle, depth 
 		result = addVector(result, results[i])
 	}
 
+	if intersection.Triangle.Material.Glossiness > 0 && scene.Config.RenderReflections {
+		rayStart := intersection.Intersection
+		rayDir := reflectVector(intersection.RayDir, intersection.IntersectionNormal)
+		reflection := raycastSceneIntersect(scene, rayStart, rayDir)
+		reflectionLight := calculateTotalLight(scene, reflection, depth+1)
+		if !intersection.Hit {
+			reflectionLight = Vector{}
+		}
+		result = Vector{
+			result[0]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[0] * intersection.Triangle.Material.Glossiness),
+			result[1]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[1] * intersection.Triangle.Material.Glossiness),
+			result[2]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[2] * intersection.Triangle.Material.Glossiness),
+			result[3]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[3] * intersection.Triangle.Material.Glossiness),
+		}
+	}
+
 	return result
 }

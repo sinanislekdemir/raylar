@@ -34,6 +34,15 @@ func renderPixel(scene *Scene, x, y int) {
 		pixel.Color = Vector{1, 1, 1, 1}
 	}
 	pixel.Depth = bestHit.Dist
+	if scene.Config.RenderReflections && bestHit.Triangle.Material.Glossiness > 0 {
+		bounceDir := reflectVector(bestHit.RayDir, bestHit.IntersectionNormal)
+		bounceStart := bestHit.Intersection
+		reflection := raycastSceneIntersect(scene, bounceStart, bounceDir)
+		if !reflection.Hit {
+			pixel.Depth += reflection.Dist
+		}
+
+	}
 	scene.Pixels[x][y] = pixel
 }
 

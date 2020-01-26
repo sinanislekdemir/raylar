@@ -17,6 +17,7 @@ type IntersectionTriangle struct {
 	Intersection       Vector
 	IntersectionNormal Vector
 	RayStart           Vector
+	RayDir             Vector
 	ObjectName         string
 	Dist               float64
 	Hits               int
@@ -177,6 +178,7 @@ func raycastNodeIntersect(rayStart, rayDir Vector, node *Node, intersection *Int
 				intersection.Intersection = intersectionPoint
 				intersection.Triangle = node.Triangles[i]
 				intersection.RayStart = rayStart
+				intersection.RayDir = rayDir
 				intersection.Dist = dist
 			}
 		}
@@ -224,6 +226,7 @@ func raycastSceneIntersect(scene *Scene, position, ray Vector) IntersectionTrian
 			bestDist = intersect.Dist
 		}
 	}
+	bestHit.RayDir = ray
 	bestHit.Dist = bestDist
 	bestHit.Hits = totalHits
 

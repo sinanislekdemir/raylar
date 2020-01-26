@@ -21,7 +21,17 @@ func ambientLightCalc(scene *Scene, intersection IntersectionTriangle) (result f
 			totalHits++
 		}
 	}
-	return 1.0 - (totalHits / float64(len(sampleDirs)))
+	result = 1.0 - (totalHits / float64(len(sampleDirs)))
+	if intersection.Triangle.Material.Glossiness > 0 && scene.Config.RenderReflections {
+		rayStart := intersection.Intersection
+		rayDir := reflectVector(intersection.RayDir, intersection.IntersectionNormal)
+		reflection := raycastSceneIntersect(scene, rayStart, rayDir)
+		if intersection.Hit {
+			ambient := ambientLightCalc(scene, reflection)
+			result = (result*(1-intersection.Triangle.Material.Glossiness) + (ambient * intersection.Triangle.Material.Glossiness))
+		}
+	}
+	return result
 }
 
 func ambientColor(scene *Scene, intersection IntersectionTriangle) (result Vector) {

@@ -12,6 +12,7 @@ type Config struct {
 	RenderLights        bool    `json:"render_lights"`
 	RenderColors        bool    `json:"render_colors"`
 	RenderAmbientColors bool    `json:"render_ambient_color"`
+	RenderReflections   bool    `json:"render_reflections"`
 	Width               int     `json:"width"`
 	Height              int     `json:"height"`
 	EdgeDetechThreshold float64 `json:"edge_detect_threshold"`

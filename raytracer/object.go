@@ -7,11 +7,12 @@ type indice [3]int64
 
 // Material -
 type Material struct {
-	Color   Vector   `json:"color"`
-	Display int64    `json:"display"`
-	Texture string   `json:"texture"`
-	Opacity float64  `json:"opactiy"`
-	Indices []indice `json:"indices"`
+	Color      Vector   `json:"color"`
+	Display    int64    `json:"display"`
+	Texture    string   `json:"texture"`
+	Opacity    float64  `json:"opactiy"`
+	Indices    []indice `json:"indices"`
+	Glossiness float64  `json:"glossiness"`
 }
 
 // Triangle definition

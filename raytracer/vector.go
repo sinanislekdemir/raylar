@@ -214,3 +214,7 @@ func projectPoint(p, origin, direction Vector) float64 {
 func vectorLength(v Vector) float64 {
 	return math.Sqrt(vectorNorm(v))
 }
+
+func reflectVector(v, n Vector) Vector {
+	return combine(v, n, 1.0, -2*dot(v, n))
+}
