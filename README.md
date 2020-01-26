@@ -8,13 +8,16 @@ Work in progress :)
 - [x] Ambient Occlusion
 - [x] Ambient Color (buggy)
 - [x] Point lights
+- [x] Basic Reflections
 
 ## Pisa Example (Light + Ambient + No Color):
-
 ![pisa](https://www.islekdemir.com/image.png)
 
 # Wall (No Lights + Ambient + Textures)
 ![wall](https://www.islekdemir.com/wall.png)
+
+# Reflections (Lights + Ambient + Reflection + Textures)
+![reflection](https://www.islekdemir.com/reflections.png)
 
 # Lucy (3 Lights (RGB) + Ambient)
 ![lucy](https://www.islekdemir.com/image_1.png)
