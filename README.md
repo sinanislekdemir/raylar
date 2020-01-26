@@ -9,12 +9,12 @@ Work in progress :)
 - [x] Ambient Color (buggy)
 - [x] Point lights
 
-## Pisa Example:
+## Pisa Example (Light + Ambient + No Color):
 
 ![pisa](https://www.islekdemir.com/image.png)
 
-# Wall
+# Wall (No Lights + Ambient + Textures)
 ![wall](https://www.islekdemir.com/wall.png)
 
-# Lucy
+# Lucy (3 Lights (RGB) + Ambient)
 ![lucy](https://www.islekdemir.com/image_1.png)
