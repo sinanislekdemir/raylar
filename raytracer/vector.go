@@ -1,13 +1,41 @@
 package raytracer
 
-import "math"
+import (
+	"math"
+)
 
 // Vector definition
 type Vector [4]float64
 
-// SubVector -
+// func degToRad(degrees float64) float64 {
+// 	return degrees * (math.Pi / 180.0)
+// }
+
+// func radToDeg(radians float64) float64 {
+// 	return radians * (180.0 / math.Pi)
+// }
+
+// func vecToSpherical(v Vector) (r, phi, theta float64) {
+// 	r = vectorLength(v)
+// 	phi = math.Atan(v[1] / v[0])
+// 	theta = math.Acos(v[2] / r)
+// 	return
+// }
+
+// func sphericalToVec(r, phi, theta float64) (v Vector) {
+// 	v[0] = r * math.Sin(theta) * math.Cos(phi)
+// 	v[1] = r * math.Sin(theta) * math.Sin(phi)
+// 	v[2] = r * math.Cos(theta)
+// 	return
+// }
+
+func sameSideTest(v1, v2 Vector) bool {
+	return dot(v1, v2) > 0
+}
+
+// subVector -
 // substract vector v2 from v1
-func SubVector(v1, v2 Vector) Vector {
+func subVector(v1, v2 Vector) Vector {
 	return Vector{
 		v1[0] - v2[0],
 		v1[1] - v2[1],
@@ -16,8 +44,39 @@ func SubVector(v1, v2 Vector) Vector {
 	}
 }
 
-// CrossProduct - v1 X v2
-func CrossProduct(v1, v2 Vector) Vector {
+func addVector(v1, v2 Vector) Vector {
+	return Vector{
+		v1[0] + v2[0],
+		v1[1] + v2[1],
+		v1[2] + v2[2],
+		v1[0],
+	}
+}
+
+func limitVector(v Vector, factor float64) Vector {
+	result := Vector{v[0], v[1], v[2], v[3]}
+	for i := 0; i < 3; i++ {
+		if result[i] > factor {
+			result[i] = factor
+		}
+	}
+	return result
+}
+
+func scaleVector(v Vector, factor float64) Vector {
+	if factor == 0 {
+		return Vector{}
+	}
+	return Vector{
+		v[0] * factor,
+		v[1] * factor,
+		v[2] * factor,
+		v[3],
+	}
+}
+
+// crossProduct - v1 X v2
+func crossProduct(v1, v2 Vector) Vector {
 	return Vector{
 		v1[1]*v2[2] - v1[2]*v2[1],
 		v1[2]*v2[0] - v1[0]*v2[2],
@@ -26,15 +85,15 @@ func CrossProduct(v1, v2 Vector) Vector {
 }
 
 func vectorNorm(v Vector) float64 {
-	return math.Sqrt((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]))
+	return (v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2])
 }
 
 func dot(v1, v2 Vector) float64 {
 	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
 }
 
-// Combine -
-func Combine(v1, v2 Vector, f1, f2 float64) Vector {
+// combine -
+func combine(v1, v2 Vector, f1, f2 float64) Vector {
 	x := (f1 * v1[0]) + (f2 * v2[0])
 	y := (f1 * v1[1]) + (f2 * v2[1])
 	z := (f1 * v1[2]) + (f2 * v2[2])
@@ -42,13 +101,13 @@ func Combine(v1, v2 Vector, f1, f2 float64) Vector {
 	return Vector{x, y, z, w}
 }
 
-// NormalizeVector -
-func NormalizeVector(v Vector) Vector {
+// normalizeVector -
+func normalizeVector(v Vector) Vector {
 	vn := vectorNorm(v)
 	if vn == 0 {
 		return v
 	}
-	invlen := 1.0 / vn
+	invlen := 1.0 / math.Sqrt(vn)
 	return Vector{
 		v[0] * invlen,
 		v[1] * invlen,
@@ -57,8 +116,8 @@ func NormalizeVector(v Vector) Vector {
 	}
 }
 
-// VectorTransform -
-func VectorTransform(v Vector, m Matrix) Vector {
+// vectorTransform -
+func vectorTransform(v Vector, m Matrix) Vector {
 	var result Vector
 	result[0] = v[0]*m[0][0] + v[1]*m[1][0] + v[2]*m[2][0] + v[3]*m[3][0]
 	result[1] = v[0]*m[0][1] + v[1]*m[1][1] + v[2]*m[2][1] + v[3]*m[3][1]
@@ -67,10 +126,10 @@ func VectorTransform(v Vector, m Matrix) Vector {
 	return result
 }
 
-// VectorDistance -
-func VectorDistance(v1, v2 Vector) float64 {
-	diff := SubVector(v2, v1)
-	return vectorNorm(diff)
+// vectorDistance -
+func vectorDistance(v1, v2 Vector) float64 {
+	diff := subVector(v2, v1)
+	return vectorLength(diff)
 }
 
 func absVector(v Vector) Vector {
@@ -82,16 +141,16 @@ func absVector(v Vector) Vector {
 	}
 }
 
-// BarycentricCoordinates is a hell of a thing
-func BarycentricCoordinates(v1, v2, v3, p Vector) (u, v, w float64, success bool) {
+// barycentricCoordinates is a hell of a thing
+func barycentricCoordinates(v1, v2, v3, p Vector) (u, v, w float64, success bool) {
 	var a1, a2 int64
 	var n, e1, e2, pt Vector
 
-	e1 = SubVector(v1, v3)
-	e2 = SubVector(v2, v3)
-	pt = SubVector(p, v3)
+	e1 = subVector(v1, v3)
+	e2 = subVector(v2, v3)
+	pt = subVector(p, v3)
 
-	n = CrossProduct(e1, e2)
+	n = crossProduct(e1, e2)
 	n = absVector(n)
 	a1 = 0
 	if n[1] > n[a1] {
@@ -136,4 +195,22 @@ func calculateBounds(vlist []Vector) (min, max Vector) {
 		}
 	}
 	return
+}
+
+// TODO: Refactor
+func localToAbsoluteList(vertices []Vector, matrix Matrix) []Vector {
+	result := make([]Vector, len(vertices))
+	for i := 0; i < len(vertices); i++ {
+		result[i] = vectorTransform(vertices[i], matrix)
+	}
+	return result
+}
+
+// Project point to a given direction
+func projectPoint(p, origin, direction Vector) float64 {
+	return direction[0]*(p[0]-origin[0]) + direction[1]*(p[1]-origin[1]) + direction[2]*(p[2]-origin[2])
+}
+
+func vectorLength(v Vector) float64 {
+	return math.Sqrt(vectorNorm(v))
 }
