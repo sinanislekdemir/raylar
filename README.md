@@ -13,5 +13,8 @@ Work in progress :)
 
 ![pisa](https://www.islekdemir.com/image.png)
 
+# Wall
+![wall](https://www.islekdemir.com/wall.png)
+
 # Lucy
 ![lucy](https://www.islekdemir.com/image_1.png)
