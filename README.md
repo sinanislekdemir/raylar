@@ -2,6 +2,10 @@
 
 Work in progress :)
 
+install: _you need golang to install_
+
+    go install github.com/sinanislekdemir/raylar
+
 - [x] Raytracing
   - [x] KD-Tree
 - [x] Texture support (png, jpeg)
