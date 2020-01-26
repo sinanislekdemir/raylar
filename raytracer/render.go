@@ -77,6 +77,6 @@ func Render(scene *Scene, left, right, top, bottom int) error {
 	log.Printf("Post processing and saving file")
 	renderImage(scene, img)
 	// Encode as PNG.
-	f, _ := os.Create("image.png")
+	f, _ := os.Create(scene.OutputFilename)
 	return png.Encode(f, img)
 }

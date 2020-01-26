@@ -29,13 +29,18 @@ c3.position = [3, -1, 2]
 # s.add_object("cube2", c2)
 # s.add_object("cube3", c3)
 # s.add_object("ground", g)
-wavefront = Wavefront(filename="/home/sinan/interior.obj")
+wavefront = Wavefront(filename="/home/sinan/X-WING.obj")
 wavefront.position = [0, 0, 0.5]
 s.add_object("house", wavefront)
-s.lights[0].position = [3, 2, 4]
+# s.lights[0].position = [2, -15, 10] ---> room
+s.lights[0].position = [13, 15, 12]
+s.lights[0].color = [253/255, 240/255, 235/255]
 
-light2 = Light(position=[10, -5, 3.345885815902096], color=[1.0, 0.3, 0.28])
+# light2 = Light(position=[3.5, -20, 12], color=[253/255, 179/255, 83/255])
 # s.lights.append(light2)
+
+# light3 = Light(position=[3.25, -20, 12], color=[253/255, 179/255, 83/255])
+# s.lights.append(light3)
 
 c2.material.texture = (
     "/home/sinan/go/src/github.com/sinanislekdemir/raylar/cube.png"

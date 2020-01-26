@@ -58,17 +58,18 @@ type PixelStorage struct {
 
 // Scene -
 type Scene struct {
-	Objects     map[string]Object `json:"objects"`
-	Lights      []Light           `json:"lights"`
-	Observers   []Observer        `json:"observers"`
-	ImageMap    map[string]image.Image
-	Stats       Stats
-	Pixels      [][]PixelStorage
-	Width       int
-	Height      int
-	ShortRadius float64
-	OpenScene   bool
-	Config      Config
+	Objects        map[string]Object `json:"objects"`
+	Lights         []Light           `json:"lights"`
+	Observers      []Observer        `json:"observers"`
+	ImageMap       map[string]image.Image
+	Stats          Stats
+	Pixels         [][]PixelStorage
+	Width          int
+	Height         int
+	ShortRadius    float64
+	OpenScene      bool
+	Config         Config
+	OutputFilename string
 }
 
 // LoadConfig file for the render

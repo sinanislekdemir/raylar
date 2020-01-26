@@ -15,4 +15,5 @@ type Config struct {
 	Width               int     `json:"width"`
 	Height              int     `json:"height"`
 	EdgeDetechThreshold float64 `json:"edge_detect_threshold"`
+	Profiling           bool    `json:"profiling"`
 }
