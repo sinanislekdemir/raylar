@@ -10,7 +10,7 @@ install: _you need golang to install_
   - [x] KD-Tree
 - [x] Texture support (png, jpeg)
 - [x] Ambient Occlusion
-- [x] Ambient Color (buggy)
+- [x] Ambient Color
 - [x] Point lights
 - [x] Light Objects (and area light)
 - [x] Basic Reflections
