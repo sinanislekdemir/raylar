@@ -80,13 +80,14 @@ func renderImage(scene *Scene, image *image.RGBA) {
 			}
 			light = limitVector(light, 1)
 			pcolor := Vector{1, 1, 1, 1}
+
 			if scene.Config.RenderColors {
 				pcolor = pixel.Color
 				if scene.Config.RenderAmbientColors {
 					pcolor = Vector{
-						pcolor[0] + pixel.AmbientColor[0],
-						pcolor[1] + pixel.AmbientColor[1],
-						pcolor[2] + pixel.AmbientColor[2],
+						(pcolor[0] * (1.0 - scene.Config.AmbientColorSharingRatio)) + (pixel.AmbientColor[0] * scene.Config.AmbientColorSharingRatio),
+						(pcolor[1] * (1.0 - scene.Config.AmbientColorSharingRatio)) + (pixel.AmbientColor[1] * scene.Config.AmbientColorSharingRatio),
+						(pcolor[2] * (1.0 - scene.Config.AmbientColorSharingRatio)) + (pixel.AmbientColor[2] * scene.Config.AmbientColorSharingRatio),
 						1,
 					}
 				}
