@@ -16,6 +16,10 @@ install: _you need golang to install_
 - [x] Basic Reflections
 
 ## Happy Buddha Example (1088700 triangles in 1h55m37s 3200x1800)
+(This is a raw cropped image - No after-effects applied)
+
+(Scene can be downloaded from [https://www.islekdemir.com/buddha.tar.gz](https://www.islekdemir.com/buddha.tar.gz))
+
 ![budha](https://www.islekdemir.com/budha.jpg)
 
     2020/01/27 17:57:06 Loading configuration from config.json
