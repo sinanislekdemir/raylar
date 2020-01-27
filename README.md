@@ -24,8 +24,8 @@ install: _you need golang to install_
 # Reflections (Lights + Ambient + Reflection + Textures)
 ![reflection](https://www.islekdemir.com/reflections.png)
 
-# Ligt Object
-![light](https://www.islekdemir.com/area_light.png)
+# Light Object
+![light](https://www.islekdemir.com/area_lights.png)
 
 # Lucy (3 Lights (RGB) + Ambient)
 ![lucy](https://www.islekdemir.com/image_1.png)
