@@ -116,13 +116,34 @@ func (s *Scene) LoadJSON(jsonFile string) error {
 	// Order of below calls is important!
 	s.flatten()
 
-	s.transformObjectsToAbsolute()
+	s.processObjects()
 	s.parseMaterials()
 	s.fixLightPos()
 	s.ambientOcclusion()
 	s.calcStats()
+	s.loadLights()
 	log.Printf("Loaded scene in %f seconds\n", time.Since(start).Seconds())
 	return nil
+}
+
+func (s *Scene) loadLights() {
+	for k := range s.Objects {
+		for i := range s.Objects[k].Triangles {
+			if !s.Objects[k].Triangles[i].Material.Light {
+				continue
+			}
+			mat := s.Objects[k].Triangles[i].Material
+			lights := sampleTriangle(s.Objects[k].Triangles[i], s.Config.SamplerLimit)
+			for li := range lights {
+				light := Light{
+					Position: lights[li],
+					Color:    mat.Color,
+					Active:   true,
+				}
+				s.Lights = append(s.Lights, light)
+			}
+		}
+	}
 }
 
 func (s *Scene) ambientOcclusion() {
@@ -239,7 +260,7 @@ func flattenSceneObjects(objects map[string]Object) map[string]Object {
 }
 
 // TODO: This is a bit heavy, refactor
-func (s *Scene) transformObjectsToAbsolute() {
+func (s *Scene) processObjects() {
 	log.Printf("Transform object vertices to absolute and build KDTrees")
 
 	for k := range s.Objects {

@@ -13,6 +13,7 @@ type Material struct {
 	Opacity    float64  `json:"opactiy"`
 	Indices    []indice `json:"indices"`
 	Glossiness float64  `json:"glossiness"`
+	Light      bool     `json:"light"`
 }
 
 // Triangle definition

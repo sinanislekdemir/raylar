@@ -18,6 +18,10 @@ func calculateLight(scene *Scene, intersection IntersectionTriangle, light Light
 		return
 	}
 
+	if intersection.Triangle.Material.Light {
+		return Vector{1, 1, 1, 1}
+	}
+
 	rayDir := normalizeVector(subVector(intersection.Intersection, light.Position))
 	rayStart := light.Position
 	rayLength := vectorDistance(intersection.Intersection, light.Position)
@@ -62,10 +66,9 @@ func calculateTotalLight(scene *Scene, intersection IntersectionTriangle, depth 
 		return
 	}
 
-	totalIntensity := 0.0
+	totalIntensity := float64(len(scene.Lights))
 	for i, light := range scene.Lights {
 		results[i] = calculateLight(scene, intersection, light, depth)
-		totalIntensity += results[i][3]
 	}
 
 	if totalIntensity > 1 {

@@ -51,7 +51,7 @@ func renderImage(scene *Scene, image *image.RGBA) {
 	if scene.Config.RenderLights && scene.Config.RenderOcclusion {
 		for i := 0; i < scene.Width; i++ {
 			for j := 0; j < scene.Height; j++ {
-				for k := range scene.Lights {
+				for k := 0; k < 3; k++ {
 					if scene.Pixels[i][j].DirectLightEnergy[k] > maxLight {
 						maxLight = scene.Pixels[i][j].DirectLightEnergy[k]
 					}

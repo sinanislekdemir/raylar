@@ -1,15 +1,14 @@
 package raytracer
 
 import (
-	"log"
 	"math/rand"
+	"sort"
 )
 
 var sampleCache [][]Vector
 
 func createSamples(normal Vector, limit int) []Vector {
 	if sampleCache == nil {
-		log.Printf("Creating sampling cache for 10.000 Vectors")
 		sampleCache = make([][]Vector, 10)
 		// Create 10 different cache variations
 		for index := 0; index < 10; index++ {
@@ -34,6 +33,26 @@ func createSamples(normal Vector, limit int) []Vector {
 			if len(result) == limit {
 				break
 			}
+		}
+	}
+	return result
+}
+
+func sampleTriangle(triangle Triangle, count int) []Vector {
+	result := make([]Vector, count)
+	for i := 0; i < count; i++ {
+		vl := []float64{
+			rand.Float64(), rand.Float64(),
+		}
+		sort.Float64s(vl)
+		s := vl[0]
+		t := vl[1]
+
+		result[i] = Vector{
+			s*triangle.P1[0] + (t-s)*triangle.P2[0] + (1-t)*triangle.P3[0],
+			s*triangle.P1[1] + (t-s)*triangle.P2[1] + (1-t)*triangle.P3[1],
+			s*triangle.P1[2] + (t-s)*triangle.P2[2] + (1-t)*triangle.P3[2],
+			1,
 		}
 	}
 	return result

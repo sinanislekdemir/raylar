@@ -1,0 +1,16 @@
+{
+    "sampler_limit": 36,
+    "light_distance": 100,
+    "max_reflection_depth": 12,
+    "ambient_occlusion_radius": 2,
+    "render_occlusion": true,
+    "occlusion_rate": 0.4,
+    "render_lights": true,
+    "render_colors": true,
+    "render_ambient_color": false,
+    "render_reflections": true,
+    "ray_correction": 0.002,
+    "width": 3200,
+    "height": 1800,
+    "edge_detect_threshold": 0.02
+}
