@@ -2,7 +2,7 @@ package raytracer
 
 import "math"
 
-func calculateReflectionColor(scene *Scene, intersection IntersectionTriangle) (result Vector) {
+func calculateReflectionColor(scene *Scene, intersection IntersectionTriangle, depth int) (result Vector) {
 	if !intersection.Hit {
 		return Vector{0, 0, 0, -1}
 	}
@@ -12,10 +12,10 @@ func calculateReflectionColor(scene *Scene, intersection IntersectionTriangle) (
 	if !reflection.Hit {
 		return Vector{1, 1, 1, 1}
 	}
-	return calculateColor(scene, reflection)
+	return calculateColor(scene, reflection, depth)
 }
 
-func calculateColor(scene *Scene, intersection IntersectionTriangle) (result Vector) {
+func calculateColor(scene *Scene, intersection IntersectionTriangle, depth int) (result Vector) {
 	if !intersection.Hit {
 		return Vector{
 			0, 0, 0, 1,
@@ -63,8 +63,8 @@ func calculateColor(scene *Scene, intersection IntersectionTriangle) (result Vec
 			}
 		}
 	}
-	if material.Glossiness > 0 && scene.Config.RenderReflections {
-		reflectColor := calculateReflectionColor(scene, intersection)
+	if material.Glossiness > 0 && scene.Config.RenderReflections && depth < scene.Config.MaxReflectionDepth {
+		reflectColor := calculateReflectionColor(scene, intersection, depth+1)
 		result = Vector{
 			result[0]*(1.0-material.Glossiness) + (reflectColor[0] * material.Glossiness),
 			result[1]*(1.0-material.Glossiness) + (reflectColor[1] * material.Glossiness),

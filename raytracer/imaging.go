@@ -24,7 +24,7 @@ func renderPixel(scene *Scene, x, y int) {
 		pixel.AmbientOcclusionRate = ambientLightCalc(scene, bestHit)
 	}
 	if scene.Config.RenderColors {
-		pixel.Color = calculateColor(scene, bestHit)
+		pixel.Color = calculateColor(scene, bestHit, 0)
 	}
 	if scene.Config.RenderAmbientColors {
 		pixel.AmbientColor = ambientColor(scene, bestHit)

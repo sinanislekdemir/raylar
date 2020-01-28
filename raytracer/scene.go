@@ -13,9 +13,10 @@ import (
 
 // Light -
 type Light struct {
-	Position Vector `json:"position"`
-	Color    Vector `json:"color"`
-	Active   bool   `json:"active"`
+	Position      Vector  `json:"position"`
+	Color         Vector  `json:"color"`
+	Active        bool    `json:"active"`
+	LightStrength float64 `json:"light_strength"`
 }
 
 // Observer -
@@ -136,9 +137,10 @@ func (s *Scene) loadLights() {
 			lights := sampleTriangle(s.Objects[k].Triangles[i], s.Config.SamplerLimit)
 			for li := range lights {
 				light := Light{
-					Position: lights[li],
-					Color:    mat.Color,
-					Active:   true,
+					Position:      lights[li],
+					Color:         mat.Color,
+					Active:        true,
+					LightStrength: s.Objects[k].Triangles[i].Material.LightStrength * 100,
 				}
 				s.Lights = append(s.Lights, light)
 			}

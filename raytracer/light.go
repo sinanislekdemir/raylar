@@ -26,11 +26,17 @@ func calculateLight(scene *Scene, intersection IntersectionTriangle, light Light
 	rayStart := light.Position
 	rayLength := vectorDistance(intersection.Intersection, light.Position)
 
-	if rayLength >= scene.Config.LightHardLimit {
+	hlimit := scene.Config.LightHardLimit
+
+	if light.LightStrength > 0 {
+		hlimit = light.LightStrength
+	}
+
+	if rayLength >= hlimit {
 		return
 	}
 
-	intensity := 1 - (rayLength / scene.Config.LightHardLimit)
+	intensity := 1 - (rayLength / hlimit)
 
 	l1 := normalizeVector(subVector(light.Position, intersection.Intersection))
 	l2 := intersection.IntersectionNormal
@@ -40,6 +46,10 @@ func calculateLight(scene *Scene, intersection IntersectionTriangle, light Light
 		intensity = 0
 	} else {
 		intensity *= dotP
+	}
+
+	if intersection.Triangle.Material.LightStrength > 0 {
+		intensity = 1
 	}
 
 	shortestIntersection = raycastSceneIntersect(scene, rayStart, rayDir)

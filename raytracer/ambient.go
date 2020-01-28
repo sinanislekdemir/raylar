@@ -43,7 +43,7 @@ func ambientColor(scene *Scene, intersection IntersectionTriangle) (result Vecto
 	for i := range sampleDirs {
 		go func(scene *Scene, intersection IntersectionTriangle, dir Vector, channel chan Vector) {
 			hit := raycastSceneIntersect(scene, intersection.Intersection, dir)
-			color := calculateColor(scene, hit)
+			color := calculateColor(scene, hit, 0)
 			channel <- color
 		}(scene, intersection, sampleDirs[i], hitChannel)
 	}
