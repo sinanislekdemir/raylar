@@ -15,6 +15,19 @@ func calculateReflectionColor(scene *Scene, intersection IntersectionTriangle, d
 	return calculateColor(scene, reflection, depth)
 }
 
+func calculateRefractionColor(scene *Scene, intersection IntersectionTriangle, depth int) (result Vector) {
+	if !intersection.Hit {
+		return Vector{0, 0, 0, -1}
+	}
+	refractionDir := refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
+	bounceStart := intersection.Intersection
+	refraction := raycastSceneIntersect(scene, bounceStart, refractionDir)
+	if !refraction.Hit {
+		return Vector{}
+	}
+	return calculateColor(scene, refraction, depth)
+}
+
 func calculateColor(scene *Scene, intersection IntersectionTriangle, depth int) (result Vector) {
 	if !intersection.Hit {
 		return Vector{
@@ -70,6 +83,15 @@ func calculateColor(scene *Scene, intersection IntersectionTriangle, depth int) 
 			result[1]*(1.0-material.Glossiness) + (reflectColor[1] * material.Glossiness),
 			result[2]*(1.0-material.Glossiness) + (reflectColor[2] * material.Glossiness),
 			result[3]*(1.0-material.Glossiness) + (reflectColor[3] * material.Glossiness),
+		}
+	}
+	if material.Transmission > 0 && scene.Config.RenderRefractions && depth < scene.Config.MaxReflectionDepth {
+		refractionColor := calculateRefractionColor(scene, intersection, depth+1)
+		result = Vector{
+			result[0]*(1.0-material.Transmission) + (refractionColor[0] * material.Transmission),
+			result[1]*(1.0-material.Transmission) + (refractionColor[1] * material.Transmission),
+			result[2]*(1.0-material.Transmission) + (refractionColor[2] * material.Transmission),
+			result[3]*(1.0-material.Transmission) + (refractionColor[3] * material.Transmission),
 		}
 	}
 	return result

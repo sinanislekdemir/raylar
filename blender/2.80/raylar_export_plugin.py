@@ -55,7 +55,9 @@ def export_object(obj):
             else:
                 material_cache[material.name]['color'] = [1, 1, 1, 1]
             if 'Alpha' in inp:
-                material_cache[material.name]['opacity'] = inp['Alpha'].default_value
+                material_cache[material.name]['transmission'] = inp['Transmission'].default_value
+            if 'IOR' in inp:
+                material_cache[material.name]['index_of_refraction'] = inp['IOR'].default_value
             if 'Metallic' in inp:
                 material_cache[material.name]['glossiness'] = inp['Metallic'].default_value
         if 'Emission' in mkeys:

@@ -20,3 +20,9 @@ Also, to get reflections, you can change "Metallic" value;
 To get a light material, change material shader form "Principled BSDF" to "Emission"
 
 ![Emission](https://www.islekdemir.com/blender3.png)
+
+To get a transparent - glass like material, use "Transmission" value along with IOR.
+
+IOR Stands for "Index of Refraction" so it is the medium index. Higher values will refract light in a bigger angle;
+
+![Refraction](https://www.islekdemir.com/blender4.png)

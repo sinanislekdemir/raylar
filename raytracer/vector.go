@@ -213,3 +213,25 @@ func vectorLength(v Vector) float64 {
 func reflectVector(v, n Vector) Vector {
 	return combine(v, n, 1.0, -2*dot(v, n))
 }
+
+func refractVector(v, n Vector, ior float64) Vector {
+	ior = 1.0 / ior
+	nDotI := dot(n, v)
+	k := 1.0 - ior*ior*(1.0-nDotI*nDotI)
+	if k < 0 {
+		return Vector{}
+	} else {
+		return subVector(scaleVector(v, ior), scaleVector(n, (ior*nDotI+math.Sqrt(k))))
+	}
+}
+
+// inline void Refract(
+// 	VEC3 &out, const VEC3 &incidentVec, const VEC3 &normal, float eta)
+//   {
+// 	float N_dot_I = Dot(normal, incidentVec);
+// 	float k = 1.f - eta * eta * (1.f - N_dot_I * N_dot_I);
+// 	if (k < 0.f)
+// 	  out = VEC3(0.f, 0.f, 0.f);
+// 	else
+// 	  out = eta * incidentVec - (eta * N_dot_I + sqrtf(k)) * normal;
+//   }

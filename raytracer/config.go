@@ -14,6 +14,7 @@ type Config struct {
 	RenderAmbientColors      bool    `json:"render_ambient_color"`
 	AmbientColorSharingRatio float64 `json:"ambient_color_ratio"`
 	RenderReflections        bool    `json:"render_reflections"`
+	RenderRefractions        bool    `json:"render_refractions"`
 	Width                    int     `json:"width"`
 	Height                   int     `json:"height"`
 	EdgeDetechThreshold      float64 `json:"edge_detect_threshold"`

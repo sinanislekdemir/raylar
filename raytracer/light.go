@@ -114,5 +114,21 @@ func calculateTotalLight(scene *Scene, intersection IntersectionTriangle, depth 
 		}
 	}
 
+	if intersection.Triangle.Material.Transmission > 0 && scene.Config.RenderRefractions {
+		rayStart := intersection.Intersection
+		rayDir := refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
+		refraction := raycastSceneIntersect(scene, rayStart, rayDir)
+		refractionLight := calculateTotalLight(scene, refraction, depth+1)
+		if !intersection.Hit {
+			refractionLight = Vector{}
+		}
+		result = Vector{
+			result[0]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[0] * intersection.Triangle.Material.Transmission),
+			result[1]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[1] * intersection.Triangle.Material.Transmission),
+			result[2]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[2] * intersection.Triangle.Material.Transmission),
+			result[3]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[3] * intersection.Triangle.Material.Transmission),
+		}
+	}
+
 	return result
 }
