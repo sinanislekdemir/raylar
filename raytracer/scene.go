@@ -30,7 +30,7 @@ type Observer struct {
 	Near        float64 `json:"near"`
 	Far         float64 `json:"far"`
 	Perspective bool    `json:"perspective"`
-	projection  Matrix
+	Projection  *Matrix `json:"projection"`
 	view        Matrix
 	width       int
 	height      int

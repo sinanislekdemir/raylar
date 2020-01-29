@@ -33,7 +33,10 @@ func Render(scene *Scene, left, right, top, bottom int) error {
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
 	// Set color for each pixel.
-	scene.Observers[0].projection = projectionMatrix
+	if scene.Observers[0].Projection == nil {
+		scene.Observers[0].Projection = &projectionMatrix
+	}
+
 	scene.Observers[0].view = view
 	scene.Observers[0].width = width
 	scene.Observers[0].height = height

@@ -206,11 +206,6 @@ func localToAbsoluteList(vertices []Vector, matrix Matrix) []Vector {
 	return result
 }
 
-// Project point to a given direction
-func projectPoint(p, origin, direction Vector) float64 {
-	return direction[0]*(p[0]-origin[0]) + direction[1]*(p[1]-origin[1]) + direction[2]*(p[2]-origin[2])
-}
-
 func vectorLength(v Vector) float64 {
 	return math.Sqrt(vectorNorm(v))
 }

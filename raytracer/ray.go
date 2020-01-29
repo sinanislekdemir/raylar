@@ -1,9 +1,5 @@
 package raytracer
 
-import (
-	"math"
-)
-
 // DIFF -
 const DIFF = 0.000000001
 
@@ -33,7 +29,7 @@ func (i *IntersectionTriangle) getTexCoords() Vector {
 }
 
 // ScreenToWorld -
-func ScreenToWorld(x, y, width, height int, camera Vector, proj, view Matrix) (rayDir Vector) {
+func screenToWorld(x, y, width, height int, camera Vector, proj, view Matrix) (rayDir Vector) {
 	var xF, yF float64
 	xF = (2.0*float64(x))/float64(width) - 1.0
 	yF = 1.0 - (2.0*float64(y))/float64(height)
@@ -48,7 +44,7 @@ func ScreenToWorld(x, y, width, height int, camera Vector, proj, view Matrix) (r
 	return rayDir
 }
 
-func raycastTriangleIntersect(start, vector, p1, p2, p3 Vector) (intersection Vector, hit bool) {
+func raycastTriangleIntersect(start, vector, p1, p2, p3 Vector) (intersection, normal Vector, hit bool) {
 	v1 := subVector(p2, p1)
 	v2 := subVector(p3, p1)
 	pVec := crossProduct(vector, v2)
@@ -78,18 +74,9 @@ func raycastTriangleIntersect(start, vector, p1, p2, p3 Vector) (intersection Ve
 	}
 	intersection = combine(start, vector, 1.0, t)
 	intersection[3] = 1.0
+	normal = normalizeVector(crossProduct(v1, v2))
 	hit = true
 	return
-}
-
-func raycastSphereIntersect(start, vector, center Vector, radius float64) bool {
-	proj := projectPoint(center, start, vector)
-	if proj < 0 {
-		proj = 0.0
-	}
-	vc := combine(start, vector, 1.0, proj)
-	dist := math.Pow(vectorDistance(center, vc), 2)
-	return dist < math.Pow(radius, 2)
 }
 
 func raycastBoxIntersect(rayStart, rayVector Vector, boundingBox BoundingBox) bool {
@@ -159,10 +146,7 @@ func raycastNodeIntersect(rayStart, rayDir Vector, node *Node, intersection *Int
 	}
 
 	for i := range node.Triangles {
-		// if dot(rayDir, node.Triangles[i].N1) > 0 {
-		// 	continue
-		// }
-		intersectionPoint, hit := raycastTriangleIntersect(
+		intersectionPoint, normal, hit := raycastTriangleIntersect(
 			rayStart,
 			rayDir,
 			node.Triangles[i].P1,
@@ -174,7 +158,7 @@ func raycastNodeIntersect(rayStart, rayDir Vector, node *Node, intersection *Int
 			dist := vectorDistance(intersectionPoint, rayStart)
 			if dist > 0 && (intersection.Dist == -1 || dist < intersection.Dist) {
 				intersection.Hit = true
-				intersection.IntersectionNormal = node.Triangles[i].N1
+				intersection.IntersectionNormal = normal
 				intersection.Intersection = intersectionPoint
 				intersection.Triangle = node.Triangles[i]
 				intersection.RayStart = rayStart
@@ -186,10 +170,10 @@ func raycastNodeIntersect(rayStart, rayDir Vector, node *Node, intersection *Int
 }
 
 func raycastObjectIntersect(object Object, rayStart, rayDir Vector) (intersection IntersectionTriangle) {
-	if !raycastSphereIntersect(rayStart, rayDir, object.Matrix[3], object.radius) {
-		// early exit
-		return
-	}
+	// if !raycastSphereIntersect(rayStart, rayDir, object.Matrix[3], object.radius) {
+	// 	// early exit
+	// 	return
+	// }
 	intersection.Dist = -1
 	raycastNodeIntersect(rayStart, rayDir, &object.Root, &intersection)
 	return

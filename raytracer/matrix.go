@@ -22,17 +22,15 @@ func perspectiveProjection(fovy, aspect, near, far float64) Matrix {
 	right := xmax
 	bottom := -ymax
 	top := ymax
-	a := (right + left) / (right - left)
-	b := (top + bottom) / (top - bottom)
-	c := -(far + near) / (far - near)
-	d := -2.0 * far * near / (far - near)
-	e := 2.0 * near / (right - left)
-	f := 2.0 * near / (top - bottom)
+	temp := 2.0 * near
+	temp2 := right - left
+	temp3 := top - bottom
+	temp4 := far - near
 	return Matrix{
-		Vector{e, 0, 0, 0},
-		Vector{0, f, 0, 0},
-		Vector{a, b, c, -1},
-		Vector{0, 0, d, 0},
+		Vector{temp / temp2, 0, 0, 0},
+		Vector{0, temp / temp3, 0, 0},
+		Vector{(right + left) / temp2, (top + bottom) / temp3, (-far - near) / temp4, -1},
+		Vector{0, 0, (-temp * far) / temp4, 0},
 	}
 }
 
@@ -41,8 +39,8 @@ func viewMatrix(eye, target, up Vector) Matrix {
 	forward := normalizeVector(subVector(target, eye))
 	side := normalizeVector(crossProduct(forward, up))
 	up = normalizeVector(crossProduct(side, forward))
-	dse := dot(side, eye)
-	due := dot(up, eye)
+	dse := -dot(side, eye)
+	due := -dot(up, eye)
 	dfe := dot(forward, eye)
 	return Matrix{
 		Vector{side[0], up[0], -forward[0], 0.0},

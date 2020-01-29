@@ -15,7 +15,7 @@ func renderPixel(scene *Scene, x, y int) {
 	bestHit.Hit = false
 	// TODO: Antialiasing. https://en.wikipedia.org/wiki/Fast_approximate_anti-aliasing
 
-	rayDir := ScreenToWorld(x, y, scene.Observers[0].width, scene.Observers[0].height, scene.Observers[0].Position, scene.Observers[0].projection, scene.Observers[0].view)
+	rayDir := screenToWorld(x, y, scene.Observers[0].width, scene.Observers[0].height, scene.Observers[0].Position, *scene.Observers[0].Projection, scene.Observers[0].view)
 	bestHit = raycastSceneIntersect(scene, scene.Observers[0].Position, rayDir)
 	if scene.Config.RenderLights {
 		pixel.DirectLightEnergy = calculateTotalLight(scene, bestHit, 0)

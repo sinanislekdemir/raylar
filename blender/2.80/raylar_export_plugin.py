@@ -1,3 +1,18 @@
+import json
+import math
+import mathutils
+from math import degrees
+
+import bmesh
+import bpy
+from bpy.props import StringProperty
+from bpy.types import Operator
+# ExportHelper is a helper class, defines filename and
+# invoke() function which calls the file selector.
+from bpy_extras.io_utils import ExportHelper
+from mathutils import *
+from math import *
+
 bl_info = {
     "name": "Raylar Export",
     "author": "sinan islekdemir",
@@ -5,15 +20,8 @@ bl_info = {
     "blender": (2, 80, 0)
 }
 
-import json
-import bpy
-import bpy_types
-import bmesh
-import math
-import pprint
-from mathutils import Vector
-from copy import deepcopy
-
+global_matrix = mathutils.Matrix.Rotation(-math.pi / 2.0, 4, 'X')
+MAT_CONVERT_CAMERA = Matrix.Rotation(math.pi / 2.0, 4, 'Y')
 
 def write_raylar_data(filepath):
     print("running raylar export...")
@@ -26,13 +34,6 @@ def write_raylar_data(filepath):
     return {'FINISHED'}
 
 
-# ExportHelper is a helper class, defines filename and
-# invoke() function which calls the file selector.
-from bpy_extras.io_utils import ExportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
-
-
 def export_object(obj):
     if obj.type != 'MESH':
         return
@@ -40,7 +41,7 @@ def export_object(obj):
     for i, matslot in enumerate(obj.material_slots):
         material = matslot.material
         material_cache[material.name] = {'_index': i}
-        mkeys = material.node_tree.nodes.keys() 
+        mkeys = material.node_tree.nodes.keys()
         if 'Principled BSDF' in mkeys:
             inp = material.node_tree.nodes['Principled BSDF'].inputs
             if 'Base Color' in inp:
@@ -73,11 +74,11 @@ def export_object(obj):
             material_cache[material.name]['texture'] = inp
 
     odata = obj.data
-    original_data = odata.copy() # Backup data
+    original_data = odata.copy()  # Backup data
     bm = bmesh.new()
     bm.from_mesh(odata)
-    bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='BEAUTY', ngon_method='BEAUTY')    
-    bm.to_mesh(odata) # Triangulate the object
+    bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='BEAUTY', ngon_method='BEAUTY')
+    bm.to_mesh(odata)  # Triangulate the object
 
     vertices = []
     normals = []
@@ -88,18 +89,19 @@ def export_object(obj):
     for face in bm.faces:
         for loop in face.loops:
             # Get position (swizzled)
-            vertices.append([-loop.vert.co[0],
+
+            vertices.append([loop.vert.co[0],
                              loop.vert.co[1],
                              loop.vert.co[2]])
 
             # Get normal (swizzled)
             # TODO: Should this be face, loop, or vertex normal?
             norm = loop.vert.normal
-            normals.append([-norm[0], norm[1], norm[2]])
+            normals.append([norm[0], norm[1], norm[2]])
 
             # Get first UV layer
             if uvLayer is not None:
-                texcoords.append([loop[uvLayer].uv[0], -loop[uvLayer].uv[1]])
+                texcoords.append([loop[uvLayer].uv[0], loop[uvLayer].uv[1]])
 
         for mat in material_cache:
             if material_cache[mat]['_index'] == face.material_index:
@@ -116,10 +118,10 @@ def export_object(obj):
         "materials": material_cache,
         "children": {},
     }
-    
+
     # Revert back the original object
     obj.data = original_data
-    
+
     return obj_dict
 
 
@@ -142,21 +144,20 @@ def _conv_matrix(matrix):
 
 
 def export_camera(camera):
-    matrix = _conv_matrix(camera.matrix_world)
-    direction = Vector(matrix[2])
-    direction.negate()
-    up = [0, 0, 1]
-
     position = camera.location
-    position = Vector([position[0], position[1], position[2], 1])
 
-    # direction.negate()
-    target = (direction*10) + position
+    up = camera.matrix_world.to_quaternion() @ Vector((0.0, 1.0, 0.0))
+    cam_direction = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, -1.0))
+    x = (cam_direction[0] * 10) + position[0]
+    y = (cam_direction[1] * 10) + position[1]
+    z = (cam_direction[2] * 10) + position[2]
+    target = [x, y, z, 1]
+
     fov = bpy.data.cameras[camera.name].angle * 180 / math.pi
     aspect = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
 
     return {
-        'position': list(camera.location),
+        'position': list(position),
         'target': list(target),
         'up': list(up),
         'fov': fov,
@@ -178,7 +179,7 @@ def construct_scene():
     for obj in bpy_scene.objects:
         obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.transform_apply(location = True, scale = True, rotation = True)
+        bpy.ops.object.transform_apply(location=True, scale=True, rotation=True)
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(False)
 
@@ -192,7 +193,6 @@ def construct_scene():
 
 
 class ExportRaylarData(Operator, ExportHelper):
-    
     """This appears in the tooltip of the operator and in the generated docs"""
     bl_idname = "export_payton.scene_data"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Export Scene to Payton/Raylar JSON"
@@ -208,7 +208,7 @@ class ExportRaylarData(Operator, ExportHelper):
 
     def execute(self, context):
         return write_raylar_data(self.filepath)
-    
+
 
 # Only needed if you want to add into a dynamic menu
 def menu_func_export(self, context):
