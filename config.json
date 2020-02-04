@@ -1,18 +1,21 @@
 {
-    "sampler_limit": 24,
+    "sampler_limit": 16,
+    "caustics_samples": 10000,
     "light_distance": 100,
-    "max_reflection_depth": 4,
-    "ambient_occlusion_radius": 0.02,
+    "illumination_multiplier": 2,
+    "max_reflection_depth": 10,
+    "ambient_occlusion_radius": 0.1,
     "render_occlusion": true,
-    "ambient_color_ratio": 0.5,
-    "occlusion_rate": 0.4,
+    "ambient_color_ratio": 0.4,
+    "occlusion_rate": 1.0,
     "render_lights": true,
     "render_colors": true,
     "render_ambient_color": true,
     "render_reflections": true,
     "render_refractions": true,
     "ray_correction": 0.002,
+    "caustics_threshold": 0,
     "width": 1600,
     "height": 900,
-    "edge_detect_threshold": 0.02
+    "edge_detect_threshold": 0.2
 }

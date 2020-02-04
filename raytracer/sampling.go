@@ -7,20 +7,24 @@ import (
 
 var sampleCache [][]Vector
 
+func createCache() {
+	sampleCache = make([][]Vector, 10)
+	// Create 10 different cache variations
+	for index := 0; index < 10; index++ {
+		sampleCache[index] = make([]Vector, 10000)
+		for i := 0; i < 10000; i++ {
+			x := rand.Float64() - 0.5
+			y := rand.Float64() - 0.5
+			z := rand.Float64() - 0.5
+			v := normalizeVector(Vector{x, y, z, 0})
+			sampleCache[index][i] = v
+		}
+	}
+}
+
 func createSamples(normal Vector, limit int) []Vector {
 	if sampleCache == nil {
-		sampleCache = make([][]Vector, 10)
-		// Create 10 different cache variations
-		for index := 0; index < 10; index++ {
-			sampleCache[index] = make([]Vector, 1000)
-			for i := 0; i < 1000; i++ {
-				x := rand.Float64() - 0.5
-				y := rand.Float64() - 0.5
-				z := rand.Float64() - 0.5
-				v := normalizeVector(Vector{x, y, z, 0})
-				sampleCache[index][i] = v
-			}
-		}
+		createCache()
 	}
 	index := rand.Int() % 10
 
@@ -53,6 +57,21 @@ func sampleTriangle(triangle Triangle, count int) []Vector {
 			s*triangle.P1[1] + (t-s)*triangle.P2[1] + (1-t)*triangle.P3[1],
 			s*triangle.P1[2] + (t-s)*triangle.P2[2] + (1-t)*triangle.P3[2],
 			1,
+		}
+	}
+	return result
+}
+
+func sampleAllDirections(count int) []Vector {
+	if sampleCache == nil {
+		createCache()
+	}
+	result := make([]Vector, 0, count)
+	index := rand.Int() % 10
+	for i := range sampleCache[index] {
+		result = append(result, sampleCache[index][i])
+		if len(result) == count {
+			break
 		}
 	}
 	return result

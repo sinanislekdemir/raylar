@@ -16,7 +16,7 @@ type Node struct {
 	depth         int
 }
 
-func (b *BoundingBox) extend(o BoundingBox) {
+func (b *BoundingBox) extend(o *BoundingBox) {
 	for i := 0; i < 3; i++ {
 		if o.MinExtend[i] < b.MinExtend[i] {
 			b.MinExtend[i] = o.MinExtend[i]
@@ -40,27 +40,30 @@ func (b *BoundingBox) longestAxis() int {
 	return result
 }
 
-func (n *Node) getBoundingBox() BoundingBox {
+func (n *Node) getBoundingBox() *BoundingBox {
 	if n.BoundingBox != nil {
-		return *n.BoundingBox
+		return n.BoundingBox
 	}
-	if len(n.Triangles) == 0 {
-		return BoundingBox{}
+	if n.Triangles == nil || len(n.Triangles) == 0 {
+		return &BoundingBox{}
 	}
 	bb := n.Triangles[0].getBoundingBox()
-	n.BoundingBox = &bb
+	n.BoundingBox = bb
 	if len(n.Triangles) == 1 {
-		return *n.BoundingBox
+		return n.BoundingBox
 	}
 	for i := 1; i < len(n.Triangles); i++ {
 		bb.extend(n.Triangles[i].getBoundingBox())
 	}
-	n.BoundingBox = &bb
-	return *n.BoundingBox
+	n.BoundingBox = bb
+	return n.BoundingBox
 }
 
 func (n *Node) midPoint() Vector {
 	mid := Vector{}
+	if n.Triangles == nil {
+		return mid
+	}
 	for i := 0; i < len(n.Triangles); i++ {
 		mid = addVector(n.Triangles[i].midPoint(), mid)
 	}
@@ -79,7 +82,7 @@ func generateNode(tris *[]Triangle, depth int) (result Node) {
 	result.depth = depth
 	result.getBoundingBox()
 
-	if len(result.Triangles) == 0 {
+	if result.Triangles == nil || len(result.Triangles) == 0 {
 		return
 	}
 
@@ -123,7 +126,7 @@ func generateNode(tris *[]Triangle, depth int) (result Node) {
 		ratio = (float64(matches)/float64(len(leftTris)) < 0.5 && float64(matches)/float64(len(rightTris)) < 0.5)
 	}
 
-	if ratio && depth < 40 {
+	if ratio && depth < 50 {
 		leftNode := generateNode(&leftTris, depth+1)
 		rightNode := generateNode(&rightTris, depth+1)
 		result.Left = &leftNode

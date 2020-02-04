@@ -2,6 +2,7 @@ package raytracer
 
 var totalNodes = 0
 var maxDepth = 0
+var idCounter int64 = 0
 
 type indice [3]int64
 
@@ -21,16 +22,18 @@ type Material struct {
 // raycasting is already expensive and trying to calculate the triangle
 // in each raycast makes it harder. So we are simplifying triangle definition
 type Triangle struct {
-	P1       Vector
-	P2       Vector
-	P3       Vector
-	N1       Vector
-	N2       Vector
-	N3       Vector
-	T1       Vector
-	T2       Vector
-	T3       Vector
-	Material Material
+	id        int64
+	P1        Vector
+	P2        Vector
+	P3        Vector
+	N1        Vector
+	N2        Vector
+	N3        Vector
+	T1        Vector
+	T2        Vector
+	T3        Vector
+	Material  Material
+	PhotonMap map[Vector]Vector
 }
 
 func (t *Triangle) equals(dest Triangle) bool {
@@ -45,7 +48,7 @@ func (t *Triangle) midPoint() Vector {
 	return mid
 }
 
-func (t *Triangle) getBoundingBox() BoundingBox {
+func (t *Triangle) getBoundingBox() *BoundingBox {
 	result := BoundingBox{}
 	result.MinExtend = t.P1
 	result.MaxExtend = t.P1
@@ -63,7 +66,7 @@ func (t *Triangle) getBoundingBox() BoundingBox {
 			result.MaxExtend[i] = t.P3[i]
 		}
 	}
-	return result
+	return &result
 }
 
 // Object -
@@ -73,7 +76,7 @@ type Object struct {
 	TexCoords []Vector            `json:"texcoords"`
 	Matrix    Matrix              `json:"matrix"`
 	Materials map[string]Material `json:"materials"`
-	Children  map[string]Object   `json:"children"`
+	Children  map[string]*Object  `json:"children"`
 	Triangles []Triangle
 	Root      Node
 	radius    float64
@@ -84,6 +87,8 @@ func (o *Object) UnifyTriangles() {
 	for matName := range o.Materials {
 		for indice := range o.Materials[matName].Indices {
 			triangle := Triangle{}
+			triangle.id = idCounter + 1
+			idCounter++
 			face := o.Materials[matName].Indices[indice]
 			triangle.P1 = o.Vertices[face[0]]
 			triangle.P2 = o.Vertices[face[1]]
@@ -122,7 +127,7 @@ func fixObjectVectorW(o *Object) {
 		o.TexCoords[i][3] = 0.0
 	}
 	for name, obj := range o.Children {
-		fixObjectVectorW(&obj)
+		fixObjectVectorW(obj)
 		o.Children[name] = obj
 	}
 }

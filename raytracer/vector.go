@@ -44,12 +44,21 @@ func subVector(v1, v2 Vector) Vector {
 	}
 }
 
+func psubVector(v1, v2 *Vector) *Vector {
+	return &Vector{
+		v1[0] - v2[0],
+		v1[1] - v2[1],
+		v1[2] - v2[2],
+		1,
+	}
+}
+
 func addVector(v1, v2 Vector) Vector {
 	return Vector{
 		v1[0] + v2[0],
 		v1[1] + v2[1],
 		v1[2] + v2[2],
-		v1[0],
+		v1[0] + v2[0],
 	}
 }
 
@@ -84,11 +93,27 @@ func crossProduct(v1, v2 Vector) Vector {
 	}
 }
 
+func pcrossProduct(v1, v2 *Vector) *Vector {
+	return &Vector{
+		v1[1]*v2[2] - v1[2]*v2[1],
+		v1[2]*v2[0] - v1[0]*v2[2],
+		v1[0]*v2[1] - v1[1]*v2[0],
+	}
+}
+
 func vectorNorm(v Vector) float64 {
 	return (v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2])
 }
 
+func pvectorNorm(v *Vector) float64 {
+	return (v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2])
+}
+
 func dot(v1, v2 Vector) float64 {
+	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
+}
+
+func pdot(v1, v2 *Vector) float64 {
 	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
 }
 
@@ -101,7 +126,29 @@ func combine(v1, v2 Vector, f1, f2 float64) Vector {
 	return Vector{x, y, z, w}
 }
 
+func pcombine(v1, v2 *Vector, f1, f2 float64) *Vector {
+	x := (f1 * v1[0]) + (f2 * v2[0])
+	y := (f1 * v1[1]) + (f2 * v2[1])
+	z := (f1 * v1[2]) + (f2 * v2[2])
+	w := (f1 * v1[3]) + (f2 * v2[3])
+	return &Vector{x, y, z, w}
+}
+
 // normalizeVector -
+func pnormalizeVector(v *Vector) *Vector {
+	vn := pvectorNorm(v)
+	if vn == 0 {
+		return v
+	}
+	invlen := 1.0 / math.Sqrt(vn)
+	return &Vector{
+		v[0] * invlen,
+		v[1] * invlen,
+		v[2] * invlen,
+		v[3],
+	}
+}
+
 func normalizeVector(v Vector) Vector {
 	vn := vectorNorm(v)
 	if vn == 0 {
@@ -130,6 +177,11 @@ func vectorTransform(v Vector, m Matrix) Vector {
 func vectorDistance(v1, v2 Vector) float64 {
 	diff := subVector(v2, v1)
 	return vectorLength(diff)
+}
+
+func pvectorDistance(v1, v2 *Vector) float64 {
+	diff := psubVector(v2, v1)
+	return vectorLength(*diff)
 }
 
 func absVector(v Vector) Vector {
@@ -214,7 +266,14 @@ func reflectVector(v, n Vector) Vector {
 	return combine(v, n, 1.0, -2*dot(v, n))
 }
 
+func vectorSum(v Vector) float64 {
+	return v[0] + v[1] + v[2]
+}
+
 func refractVector(v, n Vector, ior float64) Vector {
+	if ior < DIFF {
+		return v
+	}
 	ior = 1.0 / ior
 	nDotI := dot(n, v)
 	k := 1.0 - ior*ior*(1.0-nDotI*nDotI)

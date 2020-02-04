@@ -6,12 +6,11 @@ Light related methods
 
 import (
 	"math"
-	"reflect"
 )
 
 // Calculate light for given light source.
 // Result will be used to calculate "avarage" of the pixel color
-func calculateLight(scene *Scene, intersection IntersectionTriangle, light Light, depth int) (result Vector) {
+func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Light, depth int) (result Vector) {
 	var shortestIntersection IntersectionTriangle
 
 	if !intersection.Hit {
@@ -30,6 +29,10 @@ func calculateLight(scene *Scene, intersection IntersectionTriangle, light Light
 
 	if light.LightStrength > 0 {
 		hlimit = light.LightStrength
+	}
+
+	if scene.Config.IlluminationMultiplier > 0 {
+		hlimit *= scene.Config.IlluminationMultiplier
 	}
 
 	if rayLength >= hlimit {
@@ -53,10 +56,9 @@ func calculateLight(scene *Scene, intersection IntersectionTriangle, light Light
 	}
 
 	shortestIntersection = raycastSceneIntersect(scene, rayStart, rayDir)
-	check := reflect.DeepEqual(shortestIntersection.Triangle, intersection.Triangle)
 	s := math.Abs(rayLength - shortestIntersection.Dist)
 
-	if check || s < DIFF {
+	if (shortestIntersection.Triangle != nil && shortestIntersection.Triangle.id == intersection.Triangle.id) || s < DIFF {
 		if !sameSideTest(intersection.IntersectionNormal, shortestIntersection.IntersectionNormal) {
 			return
 		}
@@ -70,15 +72,22 @@ func calculateLight(scene *Scene, intersection IntersectionTriangle, light Light
 	return
 }
 
-func calculateTotalLight(scene *Scene, intersection IntersectionTriangle, depth int) (result Vector) {
+func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth int) (result Vector) {
 	results := make([]Vector, len(scene.Lights))
 	if (!intersection.Hit) || (depth >= scene.Config.MaxReflectionDepth) {
 		return
 	}
-
+	lightChan := make(chan Vector, len(scene.Lights))
 	totalIntensity := float64(len(scene.Lights))
-	for i, light := range scene.Lights {
-		results[i] = calculateLight(scene, intersection, light, depth)
+	for i := range scene.Lights {
+		go func(scene *Scene, intersection *IntersectionTriangle, light *Light, depth int, lightChan chan Vector) {
+			lightChan <- calculateLight(scene, intersection, light, depth)
+		}(scene, intersection, &scene.Lights[i], depth, lightChan)
+	}
+
+	for i := 0; i < len(scene.Lights); i++ {
+		light := <-lightChan
+		results[i] = light
 	}
 
 	if totalIntensity > 1 {
@@ -102,7 +111,7 @@ func calculateTotalLight(scene *Scene, intersection IntersectionTriangle, depth 
 		rayStart := intersection.Intersection
 		rayDir := reflectVector(intersection.RayDir, intersection.IntersectionNormal)
 		reflection := raycastSceneIntersect(scene, rayStart, rayDir)
-		reflectionLight := calculateTotalLight(scene, reflection, depth+1)
+		reflectionLight := calculateTotalLight(scene, &reflection, depth+1)
 		if !intersection.Hit {
 			reflectionLight = Vector{}
 		}
@@ -118,7 +127,7 @@ func calculateTotalLight(scene *Scene, intersection IntersectionTriangle, depth 
 		rayStart := intersection.Intersection
 		rayDir := refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
 		refraction := raycastSceneIntersect(scene, rayStart, rayDir)
-		refractionLight := calculateTotalLight(scene, refraction, depth+1)
+		refractionLight := calculateTotalLight(scene, &refraction, depth+1)
 		if !intersection.Hit {
 			refractionLight = Vector{}
 		}
@@ -127,6 +136,14 @@ func calculateTotalLight(scene *Scene, intersection IntersectionTriangle, depth 
 			result[1]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[1] * intersection.Triangle.Material.Transmission),
 			result[2]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[2] * intersection.Triangle.Material.Transmission),
 			result[3]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[3] * intersection.Triangle.Material.Transmission),
+		}
+	}
+
+	if scene.Config.CausticsThreshold > 0 && intersection.Triangle.PhotonMap != nil {
+		for c := range intersection.Triangle.PhotonMap {
+			if vectorDistance(intersection.Intersection, c) < scene.Config.CausticsThreshold {
+				result = addVector(result, intersection.Triangle.PhotonMap[c])
+			}
 		}
 	}
 

@@ -13,7 +13,7 @@ import (
 )
 
 // Render -
-func Render(scene *Scene, left, right, top, bottom int) error {
+func Render(scene *Scene, left, right, top, bottom, percent int) error {
 	width := scene.Config.Width
 	height := scene.Config.Height
 	log.Printf("Start rendering scene\n")
@@ -63,14 +63,18 @@ func Render(scene *Scene, left, right, top, bottom int) error {
 	for i := 0; i < totalPixels; i++ {
 		pixellist[i] = i
 	}
-	bar := pb.StartNew(totalPixels)
 
 	rand.Shuffle(totalPixels, func(i, j int) { pixellist[i], pixellist[j] = pixellist[j], pixellist[i] })
+	if percent < 100 {
+		to := percent * totalPixels / 100
+		pixellist = pixellist[:to]
+		totalPixels = to
+	}
+	bar := pb.StartNew(totalPixels)
 
 	for i := 0; i < totalPixels; i++ {
 		y := int(math.Floor(float64(pixellist[i])/float64(actualWidth))) + top
 		x := (pixellist[i] % actualWidth) + left
-
 		renderPixel(scene, x, y)
 		bar.Increment()
 	}

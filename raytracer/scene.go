@@ -59,9 +59,9 @@ type PixelStorage struct {
 
 // Scene -
 type Scene struct {
-	Objects        map[string]Object `json:"objects"`
-	Lights         []Light           `json:"lights"`
-	Observers      []Observer        `json:"observers"`
+	Objects        map[string]*Object `json:"objects"`
+	Lights         []Light            `json:"lights"`
+	Observers      []Observer         `json:"observers"`
 	ImageMap       map[string]image.Image
 	Stats          Stats
 	Pixels         [][]PixelStorage
@@ -109,7 +109,7 @@ func (s *Scene) LoadJSON(jsonFile string) error {
 	}
 	log.Printf("Fixing object Ws\n")
 	for name, obj := range s.Objects {
-		fixObjectVectorW(&obj)
+		fixObjectVectorW(obj)
 		obj.calcRadius()
 		s.Objects[name] = obj
 	}
@@ -145,6 +145,10 @@ func (s *Scene) loadLights() {
 				s.Lights = append(s.Lights, light)
 			}
 		}
+	}
+	log.Print("Building photon map")
+	if s.Config.CausticsThreshold > 0 {
+		buildPhotonMap(s)
 	}
 }
 
@@ -245,8 +249,8 @@ func (s *Scene) calcStats() {
 
 // Flatten Scene Objects and move them to root
 // So, we won't have to multiply matrices each time
-func flattenSceneObjects(objects map[string]Object) map[string]Object {
-	result := make(map[string]Object)
+func flattenSceneObjects(objects map[string]*Object) map[string]*Object {
+	result := make(map[string]*Object)
 	for k := range objects {
 		result[k] = objects[k]
 		if len(objects[k].Children) > 0 {
