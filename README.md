@@ -18,6 +18,8 @@ install: _you need golang to install_
 ## Happy Buddha Example (1088700 triangles in 1h55m37s 3200x1800)
 (This is a raw cropped image - No after-effects applied)
 
+![metro](https://www.islekdemir.com/metro.png)
+
 (Scene can be downloaded from [https://www.islekdemir.com/buddha.tar.gz](https://www.islekdemir.com/buddha.tar.gz))
 
 ![budha](https://www.islekdemir.com/budha.jpg)
