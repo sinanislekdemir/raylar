@@ -17,42 +17,31 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 		return
 	}
 
+	l1 := normalizeVector(subVector(light.Position, intersection.Intersection))
+	l2 := intersection.IntersectionNormal
+	dotP := dot(l2, l1)
+	if dotP < 0 {
+		return
+	}
+
 	if intersection.Triangle.Material.Light {
-		return Vector{1, 1, 1, 1}
+		return Vector{
+			scene.Config.Exposure * light.Color[0] * intersection.Triangle.Material.LightStrength,
+			scene.Config.Exposure * light.Color[1] * intersection.Triangle.Material.LightStrength,
+			scene.Config.Exposure * light.Color[2] * intersection.Triangle.Material.LightStrength,
+			1,
+		}
 	}
 
 	rayDir := normalizeVector(subVector(intersection.Intersection, light.Position))
 	rayStart := light.Position
 	rayLength := vectorDistance(intersection.Intersection, light.Position)
 
-	hlimit := scene.Config.LightHardLimit
-
-	if light.LightStrength > 0 {
-		hlimit = light.LightStrength
-	}
-
-	if scene.Config.IlluminationMultiplier > 0 {
-		hlimit *= scene.Config.IlluminationMultiplier
-	}
-
-	if rayLength >= hlimit {
-		return
-	}
-
-	intensity := 1 - (rayLength / hlimit)
-
-	l1 := normalizeVector(subVector(light.Position, intersection.Intersection))
-	l2 := intersection.IntersectionNormal
-
-	dotP := dot(l2, l1)
-	if dotP < 0 {
-		intensity = 0
-	} else {
-		intensity *= dotP
-	}
+	intensity := (1 / (rayLength * rayLength)) * scene.Config.Exposure
+	intensity *= dotP * light.LightStrength
 
 	if intersection.Triangle.Material.LightStrength > 0 {
-		intensity = 1
+		intensity = intersection.Triangle.Material.LightStrength * scene.Config.Exposure
 	}
 
 	shortestIntersection = raycastSceneIntersect(scene, rayStart, rayDir)
@@ -73,39 +62,27 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 }
 
 func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth int) (result Vector) {
-	results := make([]Vector, len(scene.Lights))
+	// results := make([]Vector, len(scene.Lights))
 	if (!intersection.Hit) || (depth >= scene.Config.MaxReflectionDepth) {
 		return
 	}
 	lightChan := make(chan Vector, len(scene.Lights))
-	totalIntensity := float64(len(scene.Lights))
+
 	for i := range scene.Lights {
 		go func(scene *Scene, intersection *IntersectionTriangle, light *Light, depth int, lightChan chan Vector) {
 			lightChan <- calculateLight(scene, intersection, light, depth)
 		}(scene, intersection, &scene.Lights[i], depth, lightChan)
 	}
 
+	result = Vector{}
 	for i := 0; i < len(scene.Lights); i++ {
 		light := <-lightChan
-		results[i] = light
-	}
-
-	if totalIntensity > 1 {
-		intensityScale := 1.0 / totalIntensity
-		for i := range scene.Lights {
-			results[i] = Vector{
-				results[i][0] * (results[i][3] * intensityScale),
-				results[i][1] * (results[i][3] * intensityScale),
-				results[i][2] * (results[i][3] * intensityScale),
-				(results[i][3] * intensityScale),
-			}
+		if light[3] > 0 {
+			result = addVector(result, light)
 		}
 	}
 
-	result = Vector{}
-	for i := range scene.Lights {
-		result = addVector(result, results[i])
-	}
+	result[3] = 1
 
 	if intersection.Triangle.Material.Glossiness > 0 && scene.Config.RenderReflections {
 		rayStart := intersection.Intersection

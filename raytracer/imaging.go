@@ -99,8 +99,6 @@ func renderImage(scene *Scene, image *image.RGBA) {
 					1,
 				}, light)
 			}
-			// Some kind of weird thing might exceed illumination factor over 1
-			light = limitVector(light, 1)
 
 			// Imagine that the pixel is actually white.
 			pcolor := Vector{1, 1, 1, 1}
@@ -132,6 +130,8 @@ func renderImage(scene *Scene, image *image.RGBA) {
 				pcolor[2] * light[2],
 				pixelAlpha,
 			}
+			// Some kind of weird thing might exceed illumination factor over 1
+			pcolor = limitVector(pcolor, 1)
 
 			pixel.Color = pcolor
 			pixel.TotalLight = light

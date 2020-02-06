@@ -7,21 +7,36 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cheggaaa/pb"
 )
 
 // Render -
-func Render(scene *Scene, left, right, top, bottom, percent int) error {
+func Render(scene *Scene, left, right, top, bottom, percent int, size *string) error {
+	var err error
 	width := scene.Config.Width
 	height := scene.Config.Height
+	if size != nil && strings.Contains(*size, "x") {
+		log.Printf("Set size to %s", *size)
+		split := strings.Split(*size, "x")
+		width, err = strconv.Atoi(split[0])
+		if err != nil {
+			return err
+		}
+		height, err = strconv.Atoi(split[1])
+		if err != nil {
+			return err
+		}
+	}
 	log.Printf("Start rendering scene\n")
 	start := time.Now()
 	view := viewMatrix(scene.Observers[0].Position, scene.Observers[0].Target, scene.Observers[0].Up)
 	projectionMatrix := perspectiveProjection(
 		scene.Observers[0].Fov,
-		scene.Observers[0].AspectRatio,
+		float64(width)/float64(height),
 		scene.Observers[0].Near,
 		scene.Observers[0].Far,
 	)
@@ -51,8 +66,6 @@ func Render(scene *Scene, left, right, top, bottom, percent int) error {
 		actualHeight = bottom - top
 	}
 
-	// TODO: Multithread this part once everything seems to be better.
-	// but for now, we will keep it as a single thread to make debugging easier.
 	totalPixels := actualWidth * actualHeight
 	scene.Pixels = make([][]PixelStorage, width)
 	for i := 0; i < width; i++ {

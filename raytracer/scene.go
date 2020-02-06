@@ -69,18 +69,18 @@ type Scene struct {
 	Height         int
 	ShortRadius    float64
 	OpenScene      bool
-	Config         Config
+	Config         *Config
 	OutputFilename string
 }
 
 // LoadConfig file for the render
-func (s *Scene) LoadConfig(jsonFile string) error {
+func (s *Scene) loadConfig(jsonFile string) error {
 	var config Config
 	log.Printf("Loading configuration from %s", jsonFile)
 	file, err := ioutil.ReadFile(jsonFile)
 	if err != nil {
-		log.Fatalf("Error while reading file: %s", err.Error())
-		return err
+		log.Printf("Error while reading file: %s", err.Error())
+		return nil
 	}
 	log.Printf("Unmarshal JSON\n")
 	err = json.Unmarshal(file, &config)
@@ -88,12 +88,26 @@ func (s *Scene) LoadConfig(jsonFile string) error {
 		log.Fatalf("Error unmarshalling %s", err.Error())
 		return err
 	}
-	s.Config = config
+	s.Config = &config
 	return nil
 }
 
-// LoadJSON -
-func (s *Scene) LoadJSON(jsonFile string) error {
+// Init scene
+func (s *Scene) Init(sceneFile string, configFile string) error {
+	log.Print("Initializing the scene")
+	if configFile == "" {
+		log.Print("No config set, setting defaults")
+		s.Config = &DEFAULT
+	} else {
+		err := s.loadConfig(configFile)
+		if err != nil {
+			return err
+		}
+	}
+	return s.loadJSON(sceneFile)
+}
+
+func (s *Scene) loadJSON(jsonFile string) error {
 	start := time.Now()
 	log.Printf("Loading file: %s\n", jsonFile)
 	file, err := ioutil.ReadFile(jsonFile)
@@ -113,10 +127,8 @@ func (s *Scene) LoadJSON(jsonFile string) error {
 		obj.calcRadius()
 		s.Objects[name] = obj
 	}
-
 	// Order of below calls is important!
 	s.flatten()
-
 	s.processObjects()
 	s.parseMaterials()
 	s.fixLightPos()
@@ -135,12 +147,16 @@ func (s *Scene) loadLights() {
 			}
 			mat := s.Objects[k].Triangles[i].Material
 			lights := sampleTriangle(s.Objects[k].Triangles[i], s.Config.SamplerLimit)
+			strength := s.Objects[k].Triangles[i].Material.LightStrength / float64(len(lights))
+			if strength == 0 {
+				strength = s.Config.LightHardLimit
+			}
 			for li := range lights {
 				light := Light{
 					Position:      lights[li],
 					Color:         mat.Color,
 					Active:        true,
-					LightStrength: s.Objects[k].Triangles[i].Material.LightStrength * 100,
+					LightStrength: strength,
 				}
 				s.Lights = append(s.Lights, light)
 			}
