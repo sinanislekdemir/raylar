@@ -85,10 +85,6 @@ type Object struct {
 // UnifyTriangles of the object for faster processing
 func (o *Object) UnifyTriangles() {
 	for matName := range o.Materials {
-		lightStrength := 0.0
-		if o.Materials[matName].Light {
-			lightStrength = o.Materials[matName].LightStrength / float64(len(o.Materials[matName].Indices))
-		}
 		for indice := range o.Materials[matName].Indices {
 			triangle := Triangle{}
 			triangle.id = idCounter + 1
@@ -106,7 +102,6 @@ func (o *Object) UnifyTriangles() {
 			triangle.N2 = o.Normals[face[1]]
 			triangle.N3 = o.Normals[face[2]]
 			triangle.Material = o.Materials[matName]
-			triangle.Material.LightStrength = lightStrength
 			o.Triangles = append(o.Triangles, triangle)
 		}
 	}

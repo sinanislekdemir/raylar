@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -24,6 +26,7 @@ func main() {
 	bottom := flag.Int("bottom", 0, "Bottom")
 	profiling := flag.Bool("profile", false, "Set 1 for debugging")
 	showHelp := flag.Bool("help", false, "Show help!")
+	createConfig := flag.Bool("createconfig", false, "Create config")
 	flag.Parse()
 	if showHelp != nil && *showHelp {
 		fmt.Println("--scene <scene.json>    : Scene filename")
@@ -32,6 +35,7 @@ func main() {
 		fmt.Println("--percent <percent>     : Render Percentage")
 		fmt.Println("--profile               : Turn on profiling for golang")
 		fmt.Println("--size <width>x<height> : Set width x height explicitly, overwriting config. 1600x900 eg.")
+		fmt.Println("--createconfig          : Create a default config.json to modify scene parameters")
 		os.Exit(0)
 	}
 	if outputFilename == nil {
@@ -43,6 +47,16 @@ func main() {
 		fx, _ := os.Create("profiling.prof")
 		_ = pprof.StartCPUProfile(fx)
 		defer pprof.StopCPUProfile()
+	}
+	if *createConfig {
+		file, _ := json.MarshalIndent(raytracer.DEFAULT, "", " ")
+		ferr := ioutil.WriteFile("config.json", file, 0644)
+		if ferr != nil {
+			log.Fatal(ferr.Error())
+			os.Exit(1)
+		}
+		log.Printf("Created config.json")
+		os.Exit(0)
 	}
 	err := s.Init(*sceneFile, *configFile)
 	if err != nil {

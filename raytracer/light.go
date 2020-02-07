@@ -25,6 +25,9 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 	}
 
 	if intersection.Triangle.Material.Light {
+		if intersection.Triangle.Material.LightStrength == 0 {
+			intersection.Triangle.Material.LightStrength = light.LightStrength
+		}
 		return Vector{
 			scene.Config.Exposure * light.Color[0] * intersection.Triangle.Material.LightStrength,
 			scene.Config.Exposure * light.Color[1] * intersection.Triangle.Material.LightStrength,

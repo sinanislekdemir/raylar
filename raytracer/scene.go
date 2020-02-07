@@ -147,7 +147,7 @@ func (s *Scene) loadLights() {
 			}
 			mat := s.Objects[k].Triangles[i].Material
 			lights := sampleTriangle(s.Objects[k].Triangles[i], s.Config.SamplerLimit)
-			strength := s.Objects[k].Triangles[i].Material.LightStrength / float64(len(lights))
+			strength := s.Objects[k].Triangles[i].Material.LightStrength
 			if strength == 0 {
 				strength = s.Config.LightHardLimit
 			}
