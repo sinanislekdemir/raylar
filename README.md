@@ -15,9 +15,11 @@ install: _you need golang to install_
 - [x] Light Objects (and area light)
 - [x] Basic Reflections
 
+![crystal](https://www.islekdemir.com/crystal.png)
+
 ![residential](https://www.islekdemir.com/residental.png)
 
-![metro](https://www.islekdemir.com/metro.png)
+![metro_int](https://www.islekdemir.com/mmetro.png)
 
 (Scene can be downloaded from [https://www.islekdemir.com/buddha.tar.gz](https://www.islekdemir.com/buddha.tar.gz))
 
