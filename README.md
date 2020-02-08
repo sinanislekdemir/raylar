@@ -15,6 +15,9 @@ install: _you need golang to install_
 - [x] Light Objects (and area light)
 - [x] Basic Reflections
 
+
+![interior](https://www.islekdemir.com/interior.png)
+
 ![crystal](https://www.islekdemir.com/crystal.png)
 
 ![residential](https://www.islekdemir.com/residental.png)
