@@ -62,6 +62,7 @@ func (i *IntersectionTriangle) getColor(scene *Scene, depth int) Vector {
 				s[1] = math.Abs(s[1])
 				s[1] = 1 - (s[1] - math.Floor(s[1]))
 			}
+			s[1] = 1 - s[1]
 
 			s[0] = s[0] - float64(int64(s[0]))
 			s[1] = s[1] - float64(int64(s[1]))
