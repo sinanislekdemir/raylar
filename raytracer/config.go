@@ -14,12 +14,14 @@ type Config struct {
 	RenderLights             bool    `json:"render_lights"`
 	RenderColors             bool    `json:"render_colors"`
 	RenderAmbientColors      bool    `json:"render_ambient_color"`
+	RenderCaustics           bool    `json:"render_caustics"`
 	AmbientColorSharingRatio float64 `json:"ambient_color_ratio"`
 	RenderReflections        bool    `json:"render_reflections"`
 	RenderRefractions        bool    `json:"render_refractions"`
-	CausticsThreshold        float64 `json:"caustics_threshold"`
+	PhotonSpacing            float64 `json:"photon_spacing"`
 	Width                    int     `json:"width"`
 	Height                   int     `json:"height"`
+	SmoothShading            bool    `json:"smooth_shading"`
 	EdgeDetechThreshold      float64 `json:"edge_detect_threshold"`
 }
 
@@ -28,6 +30,7 @@ var DEFAULT = Config{
 	SamplerLimit:             16,
 	CausticsSamplerLimit:     10000,
 	LightHardLimit:           100,
+	PhotonSpacing:            0.005,
 	Exposure:                 0.2,
 	MaxReflectionDepth:       6,
 	RayCorrection:            0.002,
@@ -37,11 +40,12 @@ var DEFAULT = Config{
 	RenderLights:             true,
 	RenderColors:             true,
 	RenderAmbientColors:      true,
+	RenderCaustics:           true,
 	AmbientColorSharingRatio: 0.5,
 	RenderReflections:        true,
 	RenderRefractions:        true,
-	CausticsThreshold:        0,
 	Width:                    1600,
 	Height:                   900,
+	SmoothShading:            true,
 	EdgeDetechThreshold:      0.2,
 }

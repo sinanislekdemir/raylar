@@ -27,6 +27,17 @@ func (b *BoundingBox) extend(o *BoundingBox) {
 	}
 }
 
+func (b *BoundingBox) extendVector(v Vector) {
+	for i := 0; i < 3; i++ {
+		if v[i] < b.MinExtend[i] {
+			b.MinExtend[i] = v[i]
+		}
+		if v[i] > b.MaxExtend[i] {
+			b.MaxExtend[i] = v[i]
+		}
+	}
+}
+
 func (b *BoundingBox) longestAxis() int {
 	result := 0
 	fdiff := 0.0
@@ -38,6 +49,21 @@ func (b *BoundingBox) longestAxis() int {
 		}
 	}
 	return result
+}
+
+func (b *BoundingBox) center() Vector {
+	return Vector{
+		(b.MaxExtend[0] - b.MinExtend[0]) / 2.0,
+		(b.MaxExtend[1] - b.MinExtend[1]) / 2.0,
+		(b.MaxExtend[2] - b.MinExtend[2]) / 2.0,
+		1,
+	}
+}
+
+func (b *BoundingBox) inside(v Vector) bool {
+	return (v[0]+DIFF >= b.MinExtend[0] && v[0]-DIFF <= b.MaxExtend[0] &&
+		v[1]+DIFF >= b.MinExtend[1] && v[1]-DIFF <= b.MaxExtend[1] &&
+		v[2]+DIFF >= b.MinExtend[2] && v[2]-DIFF <= b.MaxExtend[2])
 }
 
 func (n *Node) getBoundingBox() *BoundingBox {

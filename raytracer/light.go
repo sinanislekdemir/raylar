@@ -69,6 +69,11 @@ func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth
 	if (!intersection.Hit) || (depth >= scene.Config.MaxReflectionDepth) {
 		return
 	}
+	if intersection.Triangle.Material.Light {
+		c := scaleVector(intersection.Triangle.Material.Color, intersection.Triangle.Material.LightStrength)
+		return c
+	}
+
 	lightChan := make(chan Vector, len(scene.Lights))
 
 	for i := range scene.Lights {
@@ -85,44 +90,13 @@ func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth
 		}
 	}
 
-	result[3] = 1
-
-	if intersection.Triangle.Material.Glossiness > 0 && scene.Config.RenderReflections {
-		rayStart := intersection.Intersection
-		rayDir := reflectVector(intersection.RayDir, intersection.IntersectionNormal)
-		reflection := raycastSceneIntersect(scene, rayStart, rayDir)
-		reflectionLight := calculateTotalLight(scene, &reflection, depth+1)
-		if !intersection.Hit {
-			reflectionLight = Vector{}
-		}
-		result = Vector{
-			result[0]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[0] * intersection.Triangle.Material.Glossiness),
-			result[1]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[1] * intersection.Triangle.Material.Glossiness),
-			result[2]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[2] * intersection.Triangle.Material.Glossiness),
-			result[3]*(1.0-intersection.Triangle.Material.Glossiness) + (reflectionLight[3] * intersection.Triangle.Material.Glossiness),
-		}
-	}
-
-	if intersection.Triangle.Material.Transmission > 0 && scene.Config.RenderRefractions {
-		rayStart := intersection.Intersection
-		rayDir := refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
-		refraction := raycastSceneIntersect(scene, rayStart, rayDir)
-		refractionLight := calculateTotalLight(scene, &refraction, depth+1)
-		if !intersection.Hit {
-			refractionLight = Vector{}
-		}
-		result = Vector{
-			result[0]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[0] * intersection.Triangle.Material.Transmission),
-			result[1]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[1] * intersection.Triangle.Material.Transmission),
-			result[2]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[2] * intersection.Triangle.Material.Transmission),
-			result[3]*(1.0-intersection.Triangle.Material.Transmission) + (refractionLight[3] * intersection.Triangle.Material.Transmission),
-		}
-	}
-
-	if scene.Config.CausticsThreshold > 0 && intersection.Triangle.PhotonMap != nil {
-		for c := range intersection.Triangle.PhotonMap {
-			if vectorDistance(intersection.Intersection, c) < scene.Config.CausticsThreshold {
-				result = addVector(result, intersection.Triangle.PhotonMap[c])
+	if scene.Config.PhotonSpacing > 0 {
+		if intersection.Triangle.Photons != nil && len(intersection.Triangle.Photons) > 0 {
+			for i := range intersection.Triangle.Photons {
+				if vectorDistance(intersection.Triangle.Photons[i].Location, intersection.Intersection) < scene.Config.PhotonSpacing {
+					c := scaleVector(intersection.Triangle.Photons[i].Color, scene.Config.Exposure)
+					result = addVector(result, c)
+				}
 			}
 		}
 	}

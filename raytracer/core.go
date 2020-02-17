@@ -32,14 +32,8 @@ func Render(scene *Scene, left, right, top, bottom, percent int, size *string) e
 		}
 	}
 	log.Printf("Start rendering scene\n")
+	scene.prepare(width, height)
 	start := time.Now()
-	view := viewMatrix(scene.Observers[0].Position, scene.Observers[0].Target, scene.Observers[0].Up)
-	projectionMatrix := perspectiveProjection(
-		scene.Observers[0].Fov,
-		float64(width)/float64(height),
-		scene.Observers[0].Near,
-		scene.Observers[0].Far,
-	)
 
 	upLeft := image.Point{0, 0}
 	log.Printf("Output image size: %d x %d\n", width, height)
@@ -48,13 +42,6 @@ func Render(scene *Scene, left, right, top, bottom, percent int, size *string) e
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
 	// Set color for each pixel.
-	if scene.Observers[0].Projection == nil {
-		scene.Observers[0].Projection = &projectionMatrix
-	}
-
-	scene.Observers[0].view = view
-	scene.Observers[0].width = width
-	scene.Observers[0].height = height
 
 	actualWidth := width
 	actualHeight := height
@@ -67,10 +54,6 @@ func Render(scene *Scene, left, right, top, bottom, percent int, size *string) e
 	}
 
 	totalPixels := actualWidth * actualHeight
-	scene.Pixels = make([][]PixelStorage, width)
-	for i := 0; i < width; i++ {
-		scene.Pixels[i] = make([]PixelStorage, height)
-	}
 
 	pixellist := make([]int, totalPixels)
 	for i := 0; i < totalPixels; i++ {

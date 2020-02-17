@@ -18,57 +18,6 @@ type Material struct {
 	LightStrength     float64  `json:"light_strength"`
 }
 
-// Triangle definition
-// raycasting is already expensive and trying to calculate the triangle
-// in each raycast makes it harder. So we are simplifying triangle definition
-type Triangle struct {
-	id        int64
-	P1        Vector
-	P2        Vector
-	P3        Vector
-	N1        Vector
-	N2        Vector
-	N3        Vector
-	T1        Vector
-	T2        Vector
-	T3        Vector
-	Material  Material
-	PhotonMap map[Vector]Vector
-}
-
-func (t *Triangle) equals(dest Triangle) bool {
-	return t.P1 == dest.P1 && t.P2 == dest.P2 && t.P3 == dest.P3
-}
-
-func (t *Triangle) midPoint() Vector {
-	mid := t.P1
-	mid = addVector(mid, t.P2)
-	mid = addVector(mid, t.P3)
-	mid = scaleVector(mid, 1.0/3.0)
-	return mid
-}
-
-func (t *Triangle) getBoundingBox() *BoundingBox {
-	result := BoundingBox{}
-	result.MinExtend = t.P1
-	result.MaxExtend = t.P1
-	for i := 0; i < 3; i++ {
-		if t.P2[i] < result.MinExtend[i] {
-			result.MinExtend[i] = t.P2[i]
-		}
-		if t.P2[i] > result.MaxExtend[i] {
-			result.MaxExtend[i] = t.P2[i]
-		}
-		if t.P3[i] < result.MinExtend[i] {
-			result.MinExtend[i] = t.P3[i]
-		}
-		if t.P3[i] > result.MaxExtend[i] {
-			result.MaxExtend[i] = t.P3[i]
-		}
-	}
-	return &result
-}
-
 // Object -
 type Object struct {
 	Vertices  []Vector            `json:"vertices"`

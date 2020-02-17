@@ -15,8 +15,7 @@ func renderPixel(scene *Scene, x, y int) {
 
 	bestHit.Hit = false
 
-	rayDir := screenToWorld(x, y, scene.Observers[0].width, scene.Observers[0].height, scene.Observers[0].Position, *scene.Observers[0].Projection, scene.Observers[0].view)
-	bestHit = raycastSceneIntersect(scene, scene.Observers[0].Position, rayDir)
+	bestHit = scene.Pixels[x][y].WorldLocation
 
 	// We need some sampling from around
 	if scene.Config.RenderAmbientColors || scene.Config.RenderOcclusion {

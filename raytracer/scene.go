@@ -9,6 +9,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/cheggaaa/pb"
 )
 
 // Light -
@@ -17,6 +19,8 @@ type Light struct {
 	Color         Vector  `json:"color"`
 	Active        bool    `json:"active"`
 	LightStrength float64 `json:"light_strength"`
+	Directional   bool    `json:"directional_light"`
+	direction     Vector
 }
 
 // Observer -
@@ -47,6 +51,7 @@ type Stats struct {
 // PixelStorage to Store pixel information before turning it into a png
 // we need to do this for post-processing.
 type PixelStorage struct {
+	WorldLocation        IntersectionTriangle
 	DirectLightEnergy    Vector
 	AmbientOcclusionRate float64
 	Color                Vector
@@ -71,6 +76,7 @@ type Scene struct {
 	OpenScene      bool
 	Config         *Config
 	OutputFilename string
+	LitTriangles   []*Triangle
 }
 
 // LoadConfig file for the render
@@ -127,7 +133,15 @@ func (s *Scene) loadJSON(jsonFile string) error {
 		obj.calcRadius()
 		s.Objects[name] = obj
 	}
+	log.Printf("Loaded scene in %f seconds\n", time.Since(start).Seconds())
+	return nil
+}
+
+func (s *Scene) prepare(width, height int) {
+	s.Width = width
+	s.Height = height
 	// Order of below calls is important!
+	log.Printf("Init scene")
 	s.flatten()
 	s.processObjects()
 	s.parseMaterials()
@@ -135,8 +149,54 @@ func (s *Scene) loadJSON(jsonFile string) error {
 	s.ambientOcclusion()
 	s.calcStats()
 	s.loadLights()
-	log.Printf("Loaded scene in %f seconds\n", time.Since(start).Seconds())
-	return nil
+	s.prepareMatrices()
+	s.scanPixels()
+	if s.Config.RenderCaustics {
+		s.buildPhotonMap()
+	}
+	log.Printf("Done init scene")
+}
+
+func (scene *Scene) prepareMatrices() {
+	view := viewMatrix(scene.Observers[0].Position, scene.Observers[0].Target, scene.Observers[0].Up)
+	projectionMatrix := perspectiveProjection(
+		scene.Observers[0].Fov,
+		float64(scene.Width)/float64(scene.Height),
+		scene.Observers[0].Near,
+		scene.Observers[0].Far,
+	)
+	if scene.Observers[0].Projection == nil {
+		scene.Observers[0].Projection = &projectionMatrix
+	}
+
+	scene.Observers[0].view = view
+	scene.Observers[0].width = scene.Width
+	scene.Observers[0].height = scene.Height
+}
+
+func (scene *Scene) scanPixels() {
+	log.Printf("Scanning pixels on view")
+	bar := pb.StartNew(scene.Width * scene.Height)
+	scene.Pixels = make([][]PixelStorage, scene.Width)
+	for i := 0; i < scene.Width; i++ {
+		scene.Pixels[i] = make([]PixelStorage, scene.Height)
+	}
+
+	for i := 0; i < scene.Width; i++ {
+		for j := 0; j < scene.Height; j++ {
+			rayDir := screenToWorld(i, j, scene.Width, scene.Height, scene.Observers[0].Position, *scene.Observers[0].Projection, scene.Observers[0].view)
+			bestHit := raycastSceneIntersect(scene, scene.Observers[0].Position, rayDir)
+			scene.Pixels[i][j].WorldLocation = bestHit
+			bar.Increment()
+		}
+	}
+	bar.Finish()
+	log.Printf("Done scanning pixels")
+}
+
+func (s *Scene) buildPhotonMap() {
+	log.Print("Building photon map")
+	buildPhotonMap(s)
 }
 
 func (s *Scene) loadLights() {
@@ -162,9 +222,10 @@ func (s *Scene) loadLights() {
 			}
 		}
 	}
-	log.Print("Building photon map")
-	if s.Config.CausticsThreshold > 0 {
-		buildPhotonMap(s)
+	for l := range s.Lights {
+		if s.Lights[l].Directional {
+			s.Lights[l].direction = scaleVector(normalizeVector(s.Lights[l].Position), -1)
+		}
 	}
 }
 
@@ -228,6 +289,7 @@ func (s *Scene) parseMaterials() {
 					inFile.Close()
 					continue
 				}
+				log.Printf("Image %s loaded", mat.Texture)
 				s.ImageMap[mat.Texture] = src
 				inFile.Close()
 			}
