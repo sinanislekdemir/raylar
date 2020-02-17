@@ -6,6 +6,8 @@ install: _you need golang to install_
 
     go install github.com/sinanislekdemir/raylar
 
+![interior](https://www.islekdemir.com/girl.png)
+
 - [x] Raytracing
   - [x] KD-Tree
 - [x] Texture support (png, jpeg)
@@ -14,6 +16,9 @@ install: _you need golang to install_
 - [x] Point lights
 - [x] Light Objects (and area light)
 - [x] Basic Reflections
+
+
+![interior](https://www.islekdemir.com/interior.png)
 
 ![crystal](https://www.islekdemir.com/crystal.png)
 
