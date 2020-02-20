@@ -29,9 +29,9 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 			intersection.Triangle.Material.LightStrength = light.LightStrength
 		}
 		return Vector{
-			scene.Config.Exposure * light.Color[0] * intersection.Triangle.Material.LightStrength,
-			scene.Config.Exposure * light.Color[1] * intersection.Triangle.Material.LightStrength,
-			scene.Config.Exposure * light.Color[2] * intersection.Triangle.Material.LightStrength,
+			GlobalConfig.Exposure * light.Color[0] * intersection.Triangle.Material.LightStrength,
+			GlobalConfig.Exposure * light.Color[1] * intersection.Triangle.Material.LightStrength,
+			GlobalConfig.Exposure * light.Color[2] * intersection.Triangle.Material.LightStrength,
 			1,
 		}
 	}
@@ -40,11 +40,11 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 	rayStart := light.Position
 	rayLength := vectorDistance(intersection.Intersection, light.Position)
 
-	intensity := (1 / (rayLength * rayLength)) * scene.Config.Exposure
+	intensity := (1 / (rayLength * rayLength)) * GlobalConfig.Exposure
 	intensity *= dotP * light.LightStrength
 
 	if intersection.Triangle.Material.LightStrength > 0 {
-		intensity = intersection.Triangle.Material.LightStrength * scene.Config.Exposure
+		intensity = intersection.Triangle.Material.LightStrength * GlobalConfig.Exposure
 	}
 
 	shortestIntersection = raycastSceneIntersect(scene, rayStart, rayDir)
@@ -65,10 +65,10 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 }
 
 func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth int) (result Vector) {
-	// results := make([]Vector, len(scene.Lights))
-	if (!intersection.Hit) || (depth >= scene.Config.MaxReflectionDepth) {
+	if (!intersection.Hit) || (depth >= GlobalConfig.MaxReflectionDepth) {
 		return
 	}
+
 	if intersection.Triangle.Material.Light {
 		c := scaleVector(intersection.Triangle.Material.Color, intersection.Triangle.Material.LightStrength)
 		return c
@@ -90,11 +90,11 @@ func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth
 		}
 	}
 
-	if scene.Config.PhotonSpacing > 0 {
+	if GlobalConfig.PhotonSpacing > 0 {
 		if intersection.Triangle.Photons != nil && len(intersection.Triangle.Photons) > 0 {
 			for i := range intersection.Triangle.Photons {
-				if vectorDistance(intersection.Triangle.Photons[i].Location, intersection.Intersection) < scene.Config.PhotonSpacing {
-					c := scaleVector(intersection.Triangle.Photons[i].Color, scene.Config.Exposure)
+				if vectorDistance(intersection.Triangle.Photons[i].Location, intersection.Intersection) < GlobalConfig.PhotonSpacing {
+					c := scaleVector(intersection.Triangle.Photons[i].Color, GlobalConfig.Exposure)
 					result = addVector(result, c)
 				}
 			}

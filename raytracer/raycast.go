@@ -168,7 +168,7 @@ func raycastSceneIntersect(scene *Scene, position, ray Vector) IntersectionTrian
 
 	bestDist = -1
 
-	position = addVector(position, scaleVector(ray, scene.Config.RayCorrection))
+	position = addVector(position, scaleVector(ray, GlobalConfig.RayCorrection))
 	intersectChannel := make(chan IntersectionTriangle, len(scene.Objects))
 	for k := range scene.Objects {
 		go func(object *Object, name string, position, ray Vector, c chan IntersectionTriangle) {

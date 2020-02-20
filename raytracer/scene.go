@@ -74,28 +74,8 @@ type Scene struct {
 	Height         int
 	ShortRadius    float64
 	OpenScene      bool
-	Config         *Config
 	OutputFilename string
 	LitTriangles   []*Triangle
-}
-
-// LoadConfig file for the render
-func (s *Scene) loadConfig(jsonFile string) error {
-	var config Config
-	log.Printf("Loading configuration from %s", jsonFile)
-	file, err := ioutil.ReadFile(jsonFile)
-	if err != nil {
-		log.Printf("Error while reading file: %s", err.Error())
-		return nil
-	}
-	log.Printf("Unmarshal JSON\n")
-	err = json.Unmarshal(file, &config)
-	if err != nil {
-		log.Fatalf("Error unmarshalling %s", err.Error())
-		return err
-	}
-	s.Config = &config
-	return nil
 }
 
 // Init scene
@@ -103,9 +83,9 @@ func (s *Scene) Init(sceneFile string, configFile string) error {
 	log.Print("Initializing the scene")
 	if configFile == "" {
 		log.Print("No config set, setting defaults")
-		s.Config = &DEFAULT
+		GlobalConfig = DEFAULT
 	} else {
-		err := s.loadConfig(configFile)
+		err := loadConfig(configFile)
 		if err != nil {
 			return err
 		}
@@ -151,7 +131,7 @@ func (s *Scene) prepare(width, height int) {
 	s.loadLights()
 	s.prepareMatrices()
 	s.scanPixels()
-	if s.Config.RenderCaustics {
+	if GlobalConfig.RenderCaustics {
 		s.buildPhotonMap()
 	}
 	log.Printf("Done init scene")
@@ -206,11 +186,8 @@ func (s *Scene) loadLights() {
 				continue
 			}
 			mat := s.Objects[k].Triangles[i].Material
-			lights := sampleTriangle(s.Objects[k].Triangles[i], s.Config.SamplerLimit)
+			lights := sampleTriangle(s.Objects[k].Triangles[i], GlobalConfig.LightSampleCount)
 			strength := s.Objects[k].Triangles[i].Material.LightStrength
-			if strength == 0 {
-				strength = s.Config.LightHardLimit
-			}
 			for li := range lights {
 				light := Light{
 					Position:      lights[li],

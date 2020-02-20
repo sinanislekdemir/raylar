@@ -1,10 +1,16 @@
 package raytracer
 
+import (
+	"encoding/json"
+	"io/ioutil"
+	"log"
+)
+
 // Config keeps Raytracer Configuration
 type Config struct {
 	SamplerLimit             int     `json:"sampler_limit"`
+	LightSampleCount         int     `json:"light_sample_count"`
 	CausticsSamplerLimit     int     `json:"caustics_samples"`
-	LightHardLimit           float64 `json:"light_distance"`
 	Exposure                 float64 `json:"exposure"`
 	MaxReflectionDepth       int     `json:"max_reflection_depth"`
 	RayCorrection            float64 `json:"ray_correction"`
@@ -28,8 +34,8 @@ type Config struct {
 var DEFAULT = Config{
 	// Default Config Settings
 	SamplerLimit:             16,
+	LightSampleCount:         16,
 	CausticsSamplerLimit:     10000,
-	LightHardLimit:           100,
 	PhotonSpacing:            0.005,
 	Exposure:                 0.2,
 	MaxReflectionDepth:       6,
@@ -48,4 +54,25 @@ var DEFAULT = Config{
 	Height:                   900,
 	SmoothShading:            true,
 	EdgeDetechThreshold:      0.2,
+}
+
+var GlobalConfig = Config{}
+
+// LoadConfig file for the render
+func loadConfig(jsonFile string) error {
+	var config Config
+	log.Printf("Loading configuration from %s", jsonFile)
+	file, err := ioutil.ReadFile(jsonFile)
+	if err != nil {
+		log.Printf("Error while reading file: %s", err.Error())
+		return nil
+	}
+	log.Printf("Unmarshal JSON\n")
+	err = json.Unmarshal(file, &config)
+	if err != nil {
+		log.Fatalf("Error unmarshalling %s", err.Error())
+		return err
+	}
+	GlobalConfig = config
+	return nil
 }

@@ -4,25 +4,16 @@ package raytracer
 func ambientLightCalc(scene *Scene, intersection *IntersectionTriangle, samples []IntersectionTriangle, totalDirs int) (result float64) {
 	totalHits := 0.0
 	rad := scene.ShortRadius
-	if scene.Config.AmbientRadius > 0 {
-		rad = scene.Config.AmbientRadius
+	if GlobalConfig.AmbientRadius > 0 {
+		rad = GlobalConfig.AmbientRadius
 	}
 	for i := 0; i < len(samples); i++ {
-		if samples[i].Hit && samples[i].Dist < rad {
+		if samples[i].Dist < rad {
 			totalHits++
 		}
 	}
 	result = 1.0 - (totalHits / float64(totalDirs))
 
-	if intersection.Triangle != nil && intersection.Triangle.Material.Glossiness > 0 && scene.Config.RenderReflections {
-		rayStart := intersection.Intersection
-		rayDir := reflectVector(intersection.RayDir, intersection.IntersectionNormal)
-		reflection := raycastSceneIntersect(scene, rayStart, rayDir)
-		if intersection.Hit {
-			ambient := ambientLightCalc(scene, &reflection, samples, totalDirs)
-			result = (result*(1-intersection.Triangle.Material.Glossiness) + (ambient * intersection.Triangle.Material.Glossiness))
-		}
-	}
 	return result
 }
 
@@ -49,7 +40,7 @@ func ambientColor(scene *Scene, intersection *IntersectionTriangle, samples []In
 }
 
 func ambientSampling(scene *Scene, intersection *IntersectionTriangle) []IntersectionTriangle {
-	sampleDirs := createSamples(intersection.IntersectionNormal, scene.Config.SamplerLimit)
+	sampleDirs := createSamples(intersection.IntersectionNormal, GlobalConfig.SamplerLimit)
 	hitChannel := make(chan IntersectionTriangle, len(sampleDirs))
 	for i := range sampleDirs {
 		go func(scene *Scene, intersection *IntersectionTriangle, dir Vector, channel chan IntersectionTriangle) {

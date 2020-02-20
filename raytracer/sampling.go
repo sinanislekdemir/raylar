@@ -61,15 +61,3 @@ func sampleTriangle(triangle Triangle, count int) []Vector {
 	}
 	return result
 }
-
-func sampleAllDirections(count int) []Vector {
-	result := make([]Vector, count)
-	for i := 0; i < count; i++ {
-		x := rand.Float64() - 0.5
-		y := rand.Float64() - 0.5
-		z := rand.Float64() - 0.5
-		v := normalizeVector(Vector{x, y, z, 0})
-		result[i] = v
-	}
-	return result
-}

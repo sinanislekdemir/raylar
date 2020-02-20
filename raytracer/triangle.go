@@ -79,6 +79,9 @@ func (i *IntersectionTriangle) getNormal() {
 	if !i.Hit {
 		return
 	}
+	if !GlobalConfig.SmoothShading {
+		return
+	}
 	u, v, w, _ := barycentricCoordinates(i.Triangle.P1, i.Triangle.P2, i.Triangle.P3, i.Intersection)
 
 	a := scaleVector(i.Triangle.N1, u)
@@ -91,10 +94,100 @@ func (i *IntersectionTriangle) getNormal() {
 	i.IntersectionNormal = normal
 }
 
+func (i *IntersectionTriangle) render(scene *Scene, depth int) Vector {
+	if !i.Hit {
+		return Vector{}
+	}
+	if depth >= GlobalConfig.MaxReflectionDepth {
+		return Vector{}
+	}
+
+	samples := ambientSampling(scene, i)
+
+	directLight := Vector{0, 0, 0, 1}
+	if GlobalConfig.RenderLights {
+		directLight = i.getDirectLight(scene, depth)
+	}
+
+	ambientRate := GlobalConfig.OcclusionRate
+	//directLight = limitVector(directLight, ambientRate)
+
+	light := directLight
+	if directLight[0] == 0 && directLight[1] == 0 && directLight[2] == 0 {
+		ambient := ambientLightCalc(scene, i, samples, GlobalConfig.SamplerLimit)
+		light = Vector{
+			ambient * ambientRate,
+			ambient * ambientRate,
+			ambient * ambientRate,
+			1,
+		}
+	}
+
+	color := i.getColor(scene, depth)
+
+	if GlobalConfig.RenderAmbientColors {
+		aColor := ambientColor(scene, i, samples, GlobalConfig.SamplerLimit)
+		color = Vector{
+			(color[0] * (1.0 - GlobalConfig.AmbientColorSharingRatio)) + (aColor[0] * GlobalConfig.AmbientColorSharingRatio),
+			(color[1] * (1.0 - GlobalConfig.AmbientColorSharingRatio)) + (aColor[1] * GlobalConfig.AmbientColorSharingRatio),
+			(color[2] * (1.0 - GlobalConfig.AmbientColorSharingRatio)) + (aColor[2] * GlobalConfig.AmbientColorSharingRatio),
+			1,
+		}
+		color = limitVector(color, 1.0)
+	}
+
+	pAlpha := 1.0
+	if i.Dist < 0 {
+		pAlpha = 0
+	}
+
+	color = Vector{
+		color[0] * light[0],
+		color[1] * light[1],
+		color[2] * light[2],
+		pAlpha,
+	}
+	color = limitVector(color, 1)
+
+	if i.Triangle.Material.Glossiness > 0 {
+		dir := reflectVector(i.RayDir, i.IntersectionNormal)
+		target := raycastSceneIntersect(scene, i.Intersection, dir)
+		targetColor := target.render(scene, depth+1)
+		color = Vector{
+			color[0]*(1-i.Triangle.Material.Glossiness) + targetColor[0]*i.Triangle.Material.Glossiness,
+			color[1]*(1-i.Triangle.Material.Glossiness) + targetColor[1]*i.Triangle.Material.Glossiness,
+			color[2]*(1-i.Triangle.Material.Glossiness) + targetColor[2]*i.Triangle.Material.Glossiness,
+			1,
+		}
+	}
+	if i.Triangle.Material.Transmission > 0 {
+		dir := refractVector(i.RayDir, i.IntersectionNormal, i.Triangle.Material.IndexOfRefraction)
+		target := raycastSceneIntersect(scene, i.Intersection, dir)
+		targetColor := target.render(scene, depth+1)
+		color = Vector{
+			color[0]*(1-i.Triangle.Material.Transmission) + targetColor[0]*i.Triangle.Material.Transmission,
+			color[1]*(1-i.Triangle.Material.Transmission) + targetColor[1]*i.Triangle.Material.Transmission,
+			color[2]*(1-i.Triangle.Material.Transmission) + targetColor[2]*i.Triangle.Material.Transmission,
+			1,
+		}
+	}
+
+	return color
+}
+
+func (i *IntersectionTriangle) getDirectLight(scene *Scene, depth int) Vector {
+	return calculateTotalLight(scene, i, 0)
+}
+
 func (i *IntersectionTriangle) getColor(scene *Scene, depth int) Vector {
 	if !i.Hit {
 		return Vector{
 			0, 0, 0, 1,
+		}
+	}
+	if !GlobalConfig.RenderColors {
+		return Vector{
+			1, 1, 1, 1,
 		}
 	}
 
@@ -108,7 +201,7 @@ func (i *IntersectionTriangle) getColor(scene *Scene, depth int) Vector {
 			imgBounds := img.Bounds().Max
 
 			if s[0] > 1 {
-				s[0] = s[0] - math.Floor(s[0])
+				s[0] -= math.Floor(s[0])
 			}
 			if s[0] < 0 {
 				s[0] = math.Abs(s[0])
@@ -116,7 +209,7 @@ func (i *IntersectionTriangle) getColor(scene *Scene, depth int) Vector {
 			}
 
 			if s[1] > 1 {
-				s[1] = s[1] - math.Floor(s[1])
+				s[1] -= math.Floor(s[1])
 			}
 
 			if s[1] < 0 {
@@ -125,8 +218,8 @@ func (i *IntersectionTriangle) getColor(scene *Scene, depth int) Vector {
 			}
 			s[1] = 1 - s[1]
 
-			s[0] = s[0] - float64(int64(s[0]))
-			s[1] = s[1] - float64(int64(s[1]))
+			s[0] -= float64(int64(s[0]))
+			s[1] -= float64(int64(s[1]))
 
 			pixelX := int(float64(imgBounds.X) * s[0])
 			pixelY := int(float64(imgBounds.Y) * s[1])
@@ -139,24 +232,6 @@ func (i *IntersectionTriangle) getColor(scene *Scene, depth int) Vector {
 				float64(b) / 255,
 				float64(a) / 255,
 			}
-		}
-	}
-	if material.Glossiness > 0 && scene.Config.RenderReflections && depth < scene.Config.MaxReflectionDepth {
-		reflectColor := calculateReflectionColor(scene, i, depth+1)
-		result = Vector{
-			result[0]*(1.0-material.Glossiness) + (reflectColor[0] * material.Glossiness),
-			result[1]*(1.0-material.Glossiness) + (reflectColor[1] * material.Glossiness),
-			result[2]*(1.0-material.Glossiness) + (reflectColor[2] * material.Glossiness),
-			result[3]*(1.0-material.Glossiness) + (reflectColor[3] * material.Glossiness),
-		}
-	}
-	if material.Transmission > 0 && scene.Config.RenderRefractions && depth < scene.Config.MaxReflectionDepth {
-		refractionColor := calculateRefractionColor(scene, i, depth+1)
-		result = Vector{
-			result[0]*(1.0-material.Transmission) + (refractionColor[0] * material.Transmission),
-			result[1]*(1.0-material.Transmission) + (refractionColor[1] * material.Transmission),
-			result[2]*(1.0-material.Transmission) + (refractionColor[2] * material.Transmission),
-			result[3]*(1.0-material.Transmission) + (refractionColor[3] * material.Transmission),
 		}
 	}
 	return result

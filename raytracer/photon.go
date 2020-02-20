@@ -15,7 +15,7 @@ func tracePhoton(scene *Scene, photon *Photon, depth int) {
 	if photon.Intensity < DIFF {
 		return
 	}
-	if depth > scene.Config.MaxReflectionDepth {
+	if depth > GlobalConfig.MaxReflectionDepth {
 		return
 	}
 	hit := raycastSceneIntersect(scene, photon.Location, photon.Direction)

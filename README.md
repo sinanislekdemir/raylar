@@ -6,7 +6,7 @@ install: _you need golang to install_
 
     go install github.com/sinanislekdemir/raylar
 
-![glasses](https://www.islekdemir.com/11.png)
+![glasses](https://www.islekdemir.com/11_b.png)
 
 - [x] Raytracing
   - [x] KD-Tree

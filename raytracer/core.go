@@ -17,8 +17,8 @@ import (
 // Render -
 func Render(scene *Scene, left, right, top, bottom, percent int, size *string) error {
 	var err error
-	width := scene.Config.Width
-	height := scene.Config.Height
+	width := GlobalConfig.Width
+	height := GlobalConfig.Height
 	if size != nil && strings.Contains(*size, "x") {
 		log.Printf("Set size to %s", *size)
 		split := strings.Split(*size, "x")

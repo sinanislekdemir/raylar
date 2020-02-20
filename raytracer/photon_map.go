@@ -7,27 +7,13 @@ import (
 	"sync"
 )
 
-func lightSampleToScreen(scene *Scene, light *Light) []Vector {
-	result := make([]Vector, 0, scene.Width*scene.Height)
-	for i := range scene.Pixels {
-		for j := range scene.Pixels[i] {
-			if scene.Pixels[i][j].WorldLocation.Hit {
-				vec := subVector(scene.Pixels[i][j].WorldLocation.Intersection, light.Position)
-				vec = normalizeVector(vec)
-				result = append(result, vec)
-			}
-		}
-	}
-	return result
-}
-
 func buildPhotonMap(scene *Scene) {
 	log.Printf("Analysing scene for caustic surfaces")
 	causticSampleLocations := make([]Vector, 0)
 	for k := range scene.Objects {
 		for tri := range scene.Objects[k].Triangles {
 			if scene.Objects[k].Triangles[tri].Material.Glossiness > 0 || scene.Objects[k].Triangles[tri].Material.Transmission > 0 {
-				locations := sampleTriangle(scene.Objects[k].Triangles[tri], scene.Config.CausticsSamplerLimit)
+				locations := sampleTriangle(scene.Objects[k].Triangles[tri], GlobalConfig.CausticsSamplerLimit)
 				causticSampleLocations = append(causticSampleLocations, locations...)
 			}
 		}
