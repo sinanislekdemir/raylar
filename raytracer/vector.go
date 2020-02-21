@@ -72,6 +72,16 @@ func limitVector(v Vector, factor float64) Vector {
 	return result
 }
 
+func limitVectorByVector(v, factor Vector) Vector {
+	result := Vector{v[0], v[1], v[2], v[3]}
+	for i := 0; i < 3; i++ {
+		if result[i] > factor[i] {
+			result[i] = factor[i]
+		}
+	}
+	return result
+}
+
 func scaleVector(v Vector, factor float64) Vector {
 	if factor == 0 {
 		return Vector{}

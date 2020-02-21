@@ -1,5 +1,7 @@
 package raytracer
 
+import "log"
+
 var totalNodes = 0
 var maxDepth = 0
 var idCounter int64 = 0
@@ -54,6 +56,7 @@ func (o *Object) UnifyTriangles() {
 			o.Triangles = append(o.Triangles, triangle)
 		}
 	}
+	log.Printf("Loaded object with %d triangles", len(o.Triangles))
 	o.Vertices = nil
 	o.Normals = nil
 	o.TexCoords = nil

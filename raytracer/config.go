@@ -27,7 +27,6 @@ type Config struct {
 	PhotonSpacing            float64 `json:"photon_spacing"`
 	Width                    int     `json:"width"`
 	Height                   int     `json:"height"`
-	SmoothShading            bool    `json:"smooth_shading"`
 	EdgeDetechThreshold      float64 `json:"edge_detect_threshold"`
 }
 
@@ -52,7 +51,6 @@ var DEFAULT = Config{
 	RenderRefractions:        true,
 	Width:                    1600,
 	Height:                   900,
-	SmoothShading:            true,
 	EdgeDetechThreshold:      0.2,
 }
 

@@ -116,14 +116,14 @@ func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) 
 	return true
 }
 
-func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *IntersectionTriangle) {
+func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *IntersectionTriangle, smooth bool) {
 	if !raycastBoxIntersect(rayStart, rayDir, node.getBoundingBox()) {
 		return
 	}
 
 	if (node.Left != nil && node.Right != nil) && (node.Left.TriangleCount > 0 || node.Right.TriangleCount > 0) {
-		raycastNodeIntersect(rayStart, rayDir, node.Left, intersection)
-		raycastNodeIntersect(rayStart, rayDir, node.Right, intersection)
+		raycastNodeIntersect(rayStart, rayDir, node.Left, intersection, smooth)
+		raycastNodeIntersect(rayStart, rayDir, node.Right, intersection, smooth)
 		return
 	}
 
@@ -146,7 +146,7 @@ func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *In
 				intersection.RayStart = *rayStart
 				intersection.RayDir = *rayDir
 				intersection.Dist = dist
-				intersection.getNormal()
+				intersection.getNormal(smooth)
 			}
 		}
 	}
@@ -158,7 +158,7 @@ func raycastObjectIntersect(object *Object, rayStart, rayDir *Vector) (intersect
 	// 	return
 	// }
 	intersection.Dist = -1
-	raycastNodeIntersect(rayStart, rayDir, &object.Root, &intersection)
+	raycastNodeIntersect(rayStart, rayDir, &object.Root, &intersection, len(object.Triangles) > 200)
 	return
 }
 

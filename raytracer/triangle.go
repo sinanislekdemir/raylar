@@ -75,11 +75,11 @@ func (i *IntersectionTriangle) getTexCoords() Vector {
 	return tex
 }
 
-func (i *IntersectionTriangle) getNormal() {
+func (i *IntersectionTriangle) getNormal(smooth bool) {
 	if !i.Hit {
 		return
 	}
-	if !GlobalConfig.SmoothShading {
+	if !smooth {
 		return
 	}
 	u, v, w, _ := barycentricCoordinates(i.Triangle.P1, i.Triangle.P2, i.Triangle.P3, i.Intersection)
@@ -104,22 +104,22 @@ func (i *IntersectionTriangle) render(scene *Scene, depth int) Vector {
 
 	samples := ambientSampling(scene, i)
 
-	directLight := Vector{0, 0, 0, 1}
-	if GlobalConfig.RenderLights {
-		directLight = i.getDirectLight(scene, depth)
-	}
-
 	ambientRate := GlobalConfig.OcclusionRate
-	//directLight = limitVector(directLight, ambientRate)
-
-	light := directLight
-	if directLight[0] == 0 && directLight[1] == 0 && directLight[2] == 0 {
-		ambient := ambientLightCalc(scene, i, samples, GlobalConfig.SamplerLimit)
-		light = Vector{
-			ambient * ambientRate,
-			ambient * ambientRate,
-			ambient * ambientRate,
+	light := Vector{}
+	if GlobalConfig.RenderLights {
+		light = i.getDirectLight(scene, depth)
+	}
+	if GlobalConfig.RenderOcclusion {
+		aRate := ambientLightCalc(scene, i, samples, GlobalConfig.SamplerLimit)
+		aRate *= ambientRate
+		occLight := Vector{
+			light[0] + aRate,
+			light[1] + aRate,
+			light[2] + aRate,
 			1,
+		}
+		if vectorLength(light) > 0 {
+			light = limitVectorByVector(occLight, light)
 		}
 	}
 
