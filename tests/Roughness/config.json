@@ -1,0 +1,22 @@
+{
+ "sampler_limit": 32,
+ "light_sample_count": 32,
+ "caustics_samples": 1,
+ "photon_spacing": 0.007,
+ "exposure": 0.2,
+ "max_reflection_depth": 4,
+ "ray_correction": 0.002,
+ "occlusion_rate": 0.4,
+ "ambient_occlusion_radius": 0.001,
+ "render_occlusion": true,
+ "render_lights": true,
+ "render_colors": true,
+ "render_ambient_color": true,
+ "ambient_color_ratio": 0.4,
+ "render_reflections": true,
+ "render_refractions": true,
+ "render_caustics": false,
+ "width": 1600,
+ "height": 900,
+ "edge_detect_threshold": 0.2
+}

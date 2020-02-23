@@ -40,7 +40,7 @@ func ambientColor(scene *Scene, intersection *IntersectionTriangle, samples []In
 }
 
 func ambientSampling(scene *Scene, intersection *IntersectionTriangle) []IntersectionTriangle {
-	sampleDirs := createSamples(intersection.IntersectionNormal, GlobalConfig.SamplerLimit)
+	sampleDirs := createSamples(intersection.IntersectionNormal, GlobalConfig.SamplerLimit, 0)
 	hitChannel := make(chan IntersectionTriangle, len(sampleDirs))
 	for i := range sampleDirs {
 		go func(scene *Scene, intersection *IntersectionTriangle, dir Vector, channel chan IntersectionTriangle) {

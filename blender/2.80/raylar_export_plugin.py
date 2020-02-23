@@ -1,85 +1,115 @@
 import json
 import math
-import mathutils
-from math import degrees
+import os
+from math import *  # noqa
 
 import bmesh
 import bpy
+import mathutils
 from bpy.props import StringProperty
 from bpy.types import Operator
+from shutil import copyfile
+
+
 # ExportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
 from bpy_extras.io_utils import ExportHelper
-from mathutils import *
-from math import *
+from mathutils import Matrix, Vector
 
 bl_info = {
     "name": "Raylar Export",
     "author": "sinan islekdemir",
     "version": (0, 0, 0, 2),
-    "blender": (2, 80, 0)
+    "blender": (2, 80, 0),
 }
 
-global_matrix = mathutils.Matrix.Rotation(-math.pi / 2.0, 4, 'X')
-MAT_CONVERT_CAMERA = Matrix.Rotation(math.pi / 2.0, 4, 'Y')
+global_matrix = mathutils.Matrix.Rotation(-math.pi / 2.0, 4, "X")
+MAT_CONVERT_CAMERA = Matrix.Rotation(math.pi / 2.0, 4, "Y")
+global_assets = []
+
 
 def write_raylar_data(filepath):
+    global global_assets
     print("running raylar export...")
     scene = construct_scene()
-    context = json.dumps(scene, indent=2)
-    f = open(filepath, 'w', encoding='utf-8')
+    context = json.dumps(scene)
+    f = open(filepath, "w", encoding="utf-8")
     f.write(context)
     f.close()
 
-    return {'FINISHED'}
+    target_path = os.path.dirname(filepath)
+
+    for f in global_assets:
+        base_name = os.path.basename(f)
+        copyfile(f, os.path.join(target_path, base_name))
+    global_assets = []
+
+    return {"FINISHED"}
 
 
 def export_object(obj):
-    if obj.type != 'MESH':
+    if obj.type != "MESH":
         return
     material_cache = {}
     for i, matslot in enumerate(obj.material_slots):
         material = matslot.material
-        material_cache[material.name] = {'_index': i}
+        material_cache[material.name] = {"_index": i}
         mkeys = material.node_tree.nodes.keys()
-        if 'Principled BSDF' in mkeys:
-            inp = material.node_tree.nodes['Principled BSDF'].inputs
-            if 'Base Color' in inp:
-                material_cache[material.name]['color'] = [
-                    inp['Base Color'].default_value[0],
-                    inp['Base Color'].default_value[1],
-                    inp['Base Color'].default_value[2],
-                    inp['Base Color'].default_value[3],
+        if "Principled BSDF" in mkeys:
+            inp = material.node_tree.nodes["Principled BSDF"].inputs
+            if "Base Color" in inp:
+                material_cache[material.name]["color"] = [
+                    inp["Base Color"].default_value[0],
+                    inp["Base Color"].default_value[1],
+                    inp["Base Color"].default_value[2],
+                    inp["Base Color"].default_value[3],
                 ]
-                material_cache[material.name]['light'] = False
+                material_cache[material.name]["light"] = False
             else:
-                material_cache[material.name]['color'] = [1, 1, 1, 1]
-            if 'Alpha' in inp:
-                material_cache[material.name]['transmission'] = inp['Transmission'].default_value
-            if 'IOR' in inp:
-                material_cache[material.name]['index_of_refraction'] = inp['IOR'].default_value
-            if 'Metallic' in inp:
-                material_cache[material.name]['glossiness'] = inp['Metallic'].default_value
-        if 'Emission' in mkeys:
-            inp = material.node_tree.nodes['Emission'].inputs
-            if 'Color' in inp:
-                material_cache[material.name]['color'] = [
-                    inp['Color'].default_value[0],
-                    inp['Color'].default_value[1],
-                    inp['Color'].default_value[2],
-                    inp['Color'].default_value[3],
+                material_cache[material.name]["color"] = [1, 1, 1, 1]
+            if "Alpha" in inp:
+                material_cache[material.name]["transmission"] = inp[
+                    "Transmission"
+                ].default_value
+            if "IOR" in inp:
+                material_cache[material.name]["index_of_refraction"] = inp[
+                    "IOR"
+                ].default_value
+            if "Metallic" in inp:
+                material_cache[material.name]["glossiness"] = inp[
+                    "Metallic"
+                ].default_value
+            if "Roughness" in inp:
+                material_cache[material.name]["roughness"] = inp[
+                    "Roughness"
+                ].default_value
+        if "Emission" in mkeys:
+            inp = material.node_tree.nodes["Emission"].inputs
+            if "Color" in inp:
+                material_cache[material.name]["color"] = [
+                    inp["Color"].default_value[0],
+                    inp["Color"].default_value[1],
+                    inp["Color"].default_value[2],
+                    inp["Color"].default_value[3],
                 ]
-                material_cache[material.name]['light'] = True
-                material_cache[material.name]['light_strength'] = inp['Strength'].default_value
-        if 'Image Texture' in mkeys:
-            inp = material.node_tree.nodes['Image Texture'].image.filepath_from_user()
-            material_cache[material.name]['texture'] = inp
+                material_cache[material.name]["light"] = True
+                material_cache[material.name]["light_strength"] = inp[
+                    "Strength"
+                ].default_value
+        if "Image Texture" in mkeys:
+            image = material.node_tree.nodes["Image Texture"].image
+            inp = image.filepath_from_user()
+            global_assets.append(inp)
+            base_name = os.path.basename(inp)
+            material_cache[material.name]["texture"] = base_name
 
     odata = obj.data
     original_data = odata.copy()  # Backup data
     bm = bmesh.new()
     bm.from_mesh(odata)
-    bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='BEAUTY', ngon_method='BEAUTY')
+    bmesh.ops.triangulate(
+        bm, faces=bm.faces[:], quad_method="BEAUTY", ngon_method="BEAUTY"
+    )
     bm.to_mesh(odata)  # Triangulate the object
 
     vertices = []
@@ -106,10 +136,12 @@ def export_object(obj):
                 texcoords.append([loop[uvLayer].uv[0], loop[uvLayer].uv[1]])
 
         for mat in material_cache:
-            if material_cache[mat]['_index'] == face.material_index:
-                if 'indices' not in material_cache[mat]:
-                    material_cache[mat]['indices'] = []
-                material_cache[mat]['indices'].append([index, index+1, index+2])
+            if material_cache[mat]["_index"] == face.material_index:
+                if "indices" not in material_cache[mat]:
+                    material_cache[mat]["indices"] = []
+                material_cache[mat]["indices"].append([index,
+                                                       index + 1,
+                                                       index + 2])
         index += 3
 
     obj_dict = {
@@ -129,10 +161,10 @@ def export_object(obj):
 
 def export_light(light):
     return {
-        'position': list(light.location),
-        'color': list(bpy.data.lights[light.name].color),
-        'active': True,
-        'light_strength': bpy.data.lights[light.name].energy / 10,
+        "position": list(light.location),
+        "color": list(bpy.data.lights[light.name].color),
+        "active": True,
+        "light_strength": bpy.data.lights[light.name].energy / 10,
     }
 
 
@@ -147,56 +179,58 @@ def _conv_matrix(matrix):
 
 def export_camera(camera):
     position = camera.location
-
-    up = camera.matrix_world.to_quaternion() @ Vector((0.0, 1.0, 0.0))
-    cam_direction = camera.matrix_world.to_quaternion() @ Vector((0.0, 0.0, -1.0))
+    cmw = camera.matrix_world
+    up = cmw.to_quaternion() @ Vector((0.0, 1.0, 0.0))
+    cam_direction = cmw.to_quaternion() @ Vector((0.0, 0.0, -1.0))
     x = (cam_direction[0] * 10) + position[0]
     y = (cam_direction[1] * 10) + position[1]
     z = (cam_direction[2] * 10) + position[2]
     target = [x, y, z, 1]
 
     fov = bpy.data.cameras[camera.name].angle * 180 / math.pi
-    aspect = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
+    aspect = (
+        bpy.context.scene.render.resolution_x /
+        bpy.context.scene.render.resolution_y
+    )
 
     return {
-        'position': list(position),
-        'target': list(target),
-        'up': list(up),
-        'fov': fov,
-        'aspect_ratio': aspect,
-        'near': 0.01,
-        'far': 10000,
-        'perspective': True,
+        "position": list(position),
+        "target": list(target),
+        "up": list(up),
+        "fov": fov,
+        "aspect_ratio": aspect,
+        "near": 0.01,
+        "far": 10000,
+        "perspective": True,
     }
 
 
 def construct_scene():
-    scene = {
-        "objects": {},
-        "lights": [],
-        "observers": []
-    }
+    scene = {"objects": {}, "lights": [], "observers": []}
 
     bpy_scene = bpy.context.scene
     for obj in bpy_scene.objects:
         obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.transform_apply(location=True, scale=True, rotation=True)
-        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.transform_apply(location=True,
+                                       scale=True,
+                                       rotation=True)
+        bpy.ops.object.select_all(action="DESELECT")
         obj.select_set(False)
 
-        if obj.type == 'MESH':
-            scene['objects'][obj.name] = export_object(obj)
-        if obj.type == 'LIGHT':
-            scene['lights'].append(export_light(obj))
-        if obj.type == 'CAMERA':
-            scene['observers'].append(export_camera(obj))
+        if obj.type == "MESH":
+            scene["objects"][obj.name] = export_object(obj)
+        if obj.type == "LIGHT":
+            scene["lights"].append(export_light(obj))
+        if obj.type == "CAMERA":
+            scene["observers"].append(export_camera(obj))
     return scene
 
 
 class ExportRaylarData(Operator, ExportHelper):
     """This appears in the tooltip of the operator and in the generated docs"""
-    bl_idname = "export_payton.scene_data"  # important since its how bpy.ops.import_test.some_data is constructed
+
+    bl_idname = "export_payton.scene_data"
     bl_label = "Export Scene to Payton/Raylar JSON"
 
     # ExportHelper mixin class uses this
@@ -204,7 +238,7 @@ class ExportRaylarData(Operator, ExportHelper):
 
     filter_glob: StringProperty(
         default="*.json",
-        options={'HIDDEN'},
+        options={"HIDDEN"},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
@@ -214,7 +248,8 @@ class ExportRaylarData(Operator, ExportHelper):
 
 # Only needed if you want to add into a dynamic menu
 def menu_func_export(self, context):
-    self.layout.operator(ExportRaylarData.bl_idname, text="Raylar Export (scene.json)")
+    self.layout.operator(ExportRaylarData.bl_idname,
+                         text="Raylar Export (scene.json)")
 
 
 def register():

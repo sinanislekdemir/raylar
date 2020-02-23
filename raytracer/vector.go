@@ -29,8 +29,8 @@ type Vector [4]float64
 // 	return
 // }
 
-func sameSideTest(v1, v2 Vector) bool {
-	return dot(v1, v2) > 0
+func sameSideTest(v1, v2 Vector, shifting float64) bool {
+	return dot(v1, v2)-shifting > 0
 }
 
 // subVector -
@@ -66,6 +66,16 @@ func limitVector(v Vector, factor float64) Vector {
 	result := Vector{v[0], v[1], v[2], v[3]}
 	for i := 0; i < 3; i++ {
 		if result[i] > factor {
+			result[i] = factor
+		}
+	}
+	return result
+}
+
+func upscaleVector(v Vector, factor float64) Vector {
+	result := Vector{v[0], v[1], v[2], v[3]}
+	for i := 0; i < 3; i++ {
+		if result[i] < factor {
 			result[i] = factor
 		}
 	}

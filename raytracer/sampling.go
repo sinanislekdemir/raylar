@@ -22,7 +22,7 @@ func createCache() {
 	}
 }
 
-func createSamples(normal Vector, limit int) []Vector {
+func createSamples(normal Vector, limit int, shifting float64) []Vector {
 	if sampleCache == nil {
 		createCache()
 	}
@@ -32,7 +32,7 @@ func createSamples(normal Vector, limit int) []Vector {
 	result = append(result, normal)
 
 	for i := range sampleCache[index] {
-		if sameSideTest(sampleCache[index][i], normal) {
+		if sameSideTest(sampleCache[index][i], normal, shifting) {
 			result = append(result, sampleCache[index][i])
 			if len(result) == limit {
 				break

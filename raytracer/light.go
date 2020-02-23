@@ -51,7 +51,7 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 	s := math.Abs(rayLength - shortestIntersection.Dist)
 
 	if (shortestIntersection.Triangle != nil && shortestIntersection.Triangle.id == intersection.Triangle.id) || s < DIFF {
-		if !sameSideTest(intersection.IntersectionNormal, shortestIntersection.IntersectionNormal) {
+		if !sameSideTest(intersection.IntersectionNormal, shortestIntersection.IntersectionNormal, 0) {
 			return
 		}
 		return Vector{
@@ -90,7 +90,7 @@ func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth
 		}
 	}
 
-	if GlobalConfig.PhotonSpacing > 0 {
+	if GlobalConfig.PhotonSpacing > 0 && GlobalConfig.RenderCaustics {
 		if intersection.Triangle.Photons != nil && len(intersection.Triangle.Photons) > 0 {
 			for i := range intersection.Triangle.Photons {
 				if vectorDistance(intersection.Triangle.Photons[i].Location, intersection.Intersection) < GlobalConfig.PhotonSpacing {

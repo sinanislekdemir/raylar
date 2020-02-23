@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/cheggaaa/pb"
@@ -74,6 +75,7 @@ type Scene struct {
 	Height         int
 	ShortRadius    float64
 	OpenScene      bool
+	InputFilename  string
 	OutputFilename string
 	LitTriangles   []*Triangle
 }
@@ -107,6 +109,7 @@ func (s *Scene) loadJSON(jsonFile string) error {
 		log.Fatalf("Error unmarshalling %s", err.Error())
 		return err
 	}
+	s.InputFilename = jsonFile
 	log.Printf("Fixing object Ws\n")
 	for name, obj := range s.Objects {
 		fixObjectVectorW(obj)
@@ -254,7 +257,13 @@ func (s *Scene) parseMaterials() {
 				continue
 			}
 			if mat.Texture != "" {
-				inFile, err := os.Open(mat.Texture)
+				texFile := mat.Texture
+				_, err := os.Stat(texFile)
+				if os.IsNotExist(err) {
+					scenePath := filepath.Dir(s.InputFilename)
+					texFile = filepath.Join(scenePath, mat.Texture)
+				}
+				inFile, err := os.Open(texFile)
 				if err != nil {
 					log.Printf("Material texture [%s] can't be opened for material [%s]\n", mat.Texture, m)
 					inFile.Close()

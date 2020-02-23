@@ -18,6 +18,7 @@ type Triangle struct {
 	T3       Vector
 	Material Material
 	Photons  []Photon
+	Smooth   bool
 }
 
 // IntersectionTriangle defines the ratcast triangle intersection result
@@ -75,20 +76,21 @@ func (i *IntersectionTriangle) getTexCoords() Vector {
 	return tex
 }
 
-func (i *IntersectionTriangle) getNormal(smooth bool) {
+func (i *IntersectionTriangle) getNormal() {
 	if !i.Hit {
 		return
 	}
-	if !smooth {
+	if !i.Triangle.Smooth {
 		return
 	}
+
 	u, v, w, _ := barycentricCoordinates(i.Triangle.P1, i.Triangle.P2, i.Triangle.P3, i.Intersection)
 
 	a := scaleVector(i.Triangle.N1, u)
 	b := scaleVector(i.Triangle.N2, v)
 	c := scaleVector(i.Triangle.N3, w)
 	normal := normalizeVector(addVector(addVector(a, b), c))
-	if !sameSideTest(normal, i.IntersectionNormal) {
+	if !sameSideTest(normal, i.IntersectionNormal, 0) {
 		normal = scaleVector(normal, -1)
 	}
 	i.IntersectionNormal = normal
@@ -108,6 +110,9 @@ func (i *IntersectionTriangle) render(scene *Scene, depth int) Vector {
 	light := Vector{}
 	if GlobalConfig.RenderLights {
 		light = i.getDirectLight(scene, depth)
+		if GlobalConfig.RenderOcclusion {
+			light = upscaleVector(light, ambientRate)
+		}
 	}
 	if GlobalConfig.RenderOcclusion {
 		aRate := ambientLightCalc(scene, i, samples, GlobalConfig.SamplerLimit)
@@ -120,6 +125,8 @@ func (i *IntersectionTriangle) render(scene *Scene, depth int) Vector {
 		}
 		if vectorLength(light) > 0 {
 			light = limitVectorByVector(occLight, light)
+		} else {
+			light = occLight
 		}
 	}
 
@@ -147,27 +154,66 @@ func (i *IntersectionTriangle) render(scene *Scene, depth int) Vector {
 		color[2] * light[2],
 		pAlpha,
 	}
+	dirs := make([]Vector, 0)
+
 	color = limitVector(color, 1)
+	if i.Triangle.Material.Glossiness > 0 || i.Triangle.Material.Transmission > 0 {
+		if i.Triangle.Material.Roughness == 0 {
+			dirs = append(dirs, i.IntersectionNormal)
+		} else {
+			// numNormals := int(math.Floor(i.Triangle.Material.Roughness * float64(GlobalConfig.SamplerLimit)))
+			numNormals := int(math.Floor(i.Triangle.Material.Roughness * 10))
+			if numNormals > 0 {
+				dirSamples := createSamples(i.IntersectionNormal, numNormals, 1-i.Triangle.Material.Roughness)
+				dirs = append(dirs, dirSamples...)
+			}
+		}
+	}
 
 	if i.Triangle.Material.Glossiness > 0 {
-		dir := reflectVector(i.RayDir, i.IntersectionNormal)
-		target := raycastSceneIntersect(scene, i.Intersection, dir)
-		targetColor := target.render(scene, depth+1)
+		collColor := Vector{}
+		colChan := make(chan Vector, len(dirs))
+		for m := range dirs {
+			go func(scene *Scene, intersection *IntersectionTriangle, dir Vector, depth int, colChan chan Vector) {
+				dir = reflectVector(intersection.RayDir, dir)
+				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
+				colChan <- target.render(scene, depth)
+			}(scene, i, dirs[m], depth+1, colChan)
+		}
+		for m := 0; m < len(dirs); m++ {
+			targetColor := <-colChan
+			collColor = addVector(collColor, targetColor)
+		}
+		collColor = scaleVector(collColor, 1.0/float64(len(dirs)))
+
 		color = Vector{
-			color[0]*(1-i.Triangle.Material.Glossiness) + targetColor[0]*i.Triangle.Material.Glossiness,
-			color[1]*(1-i.Triangle.Material.Glossiness) + targetColor[1]*i.Triangle.Material.Glossiness,
-			color[2]*(1-i.Triangle.Material.Glossiness) + targetColor[2]*i.Triangle.Material.Glossiness,
+			color[0]*(1-i.Triangle.Material.Glossiness) + collColor[0]*i.Triangle.Material.Glossiness,
+			color[1]*(1-i.Triangle.Material.Glossiness) + collColor[1]*i.Triangle.Material.Glossiness,
+			color[2]*(1-i.Triangle.Material.Glossiness) + collColor[2]*i.Triangle.Material.Glossiness,
 			1,
 		}
 	}
 	if i.Triangle.Material.Transmission > 0 {
-		dir := refractVector(i.RayDir, i.IntersectionNormal, i.Triangle.Material.IndexOfRefraction)
-		target := raycastSceneIntersect(scene, i.Intersection, dir)
-		targetColor := target.render(scene, depth+1)
+		collColor := Vector{}
+		colChan := make(chan Vector, len(dirs))
+		for m := range dirs {
+			go func(scene *Scene, intersection *IntersectionTriangle, dir Vector, depth int, colChan chan Vector) {
+				dir = refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
+				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
+				colChan <- target.render(scene, depth)
+			}(scene, i, dirs[m], depth+1, colChan)
+		}
+		for m := 0; m < len(dirs); m++ {
+			targetColor := <-colChan
+			collColor = addVector(collColor, targetColor)
+		}
+		collColor = scaleVector(collColor, 1.0/float64(len(dirs)))
+		trans := i.Triangle.Material.Transmission * (1 - i.Triangle.Material.Roughness)
+
 		color = Vector{
-			color[0]*(1-i.Triangle.Material.Transmission) + targetColor[0]*i.Triangle.Material.Transmission,
-			color[1]*(1-i.Triangle.Material.Transmission) + targetColor[1]*i.Triangle.Material.Transmission,
-			color[2]*(1-i.Triangle.Material.Transmission) + targetColor[2]*i.Triangle.Material.Transmission,
+			color[0]*(1-trans) + collColor[0]*trans,
+			color[1]*(1-trans) + collColor[1]*trans,
+			color[2]*(1-trans) + collColor[2]*trans,
 			1,
 		}
 	}

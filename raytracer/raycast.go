@@ -53,7 +53,7 @@ func raycastTriangleIntersect(start, vector, p1, p2, p3 *Vector) (intersection, 
 	intersection = pcombine(start, vector, 1.0, t)
 	intersection[3] = 1.0
 	normal = pnormalizeVector(pcrossProduct(v1, v2))
-	if sameSideTest(*normal, *vector) {
+	if sameSideTest(*normal, *vector, 0) {
 		iNormal := scaleVector(*normal, -1)
 		normal = &iNormal
 	}
@@ -116,14 +116,14 @@ func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) 
 	return true
 }
 
-func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *IntersectionTriangle, smooth bool) {
+func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *IntersectionTriangle) {
 	if !raycastBoxIntersect(rayStart, rayDir, node.getBoundingBox()) {
 		return
 	}
 
 	if (node.Left != nil && node.Right != nil) && (node.Left.TriangleCount > 0 || node.Right.TriangleCount > 0) {
-		raycastNodeIntersect(rayStart, rayDir, node.Left, intersection, smooth)
-		raycastNodeIntersect(rayStart, rayDir, node.Right, intersection, smooth)
+		raycastNodeIntersect(rayStart, rayDir, node.Left, intersection)
+		raycastNodeIntersect(rayStart, rayDir, node.Right, intersection)
 		return
 	}
 
@@ -146,7 +146,7 @@ func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *In
 				intersection.RayStart = *rayStart
 				intersection.RayDir = *rayDir
 				intersection.Dist = dist
-				intersection.getNormal(smooth)
+				intersection.getNormal()
 			}
 		}
 	}
@@ -158,7 +158,7 @@ func raycastObjectIntersect(object *Object, rayStart, rayDir *Vector) (intersect
 	// 	return
 	// }
 	intersection.Dist = -1
-	raycastNodeIntersect(rayStart, rayDir, &object.Root, &intersection, len(object.Triangles) > 200)
+	raycastNodeIntersect(rayStart, rayDir, &object.Root, &intersection)
 	return
 }
 

@@ -16,6 +16,7 @@ type Material struct {
 	IndexOfRefraction float64  `json:"index_of_refraction"`
 	Indices           []indice `json:"indices"`
 	Glossiness        float64  `json:"glossiness"`
+	Roughness         float64  `json:"roughness"`
 	Light             bool     `json:"light"`
 	LightStrength     float64  `json:"light_strength"`
 }
@@ -52,6 +53,7 @@ func (o *Object) UnifyTriangles() {
 			triangle.N1 = o.Normals[face[0]]
 			triangle.N2 = o.Normals[face[1]]
 			triangle.N3 = o.Normals[face[2]]
+			triangle.Smooth = dot(triangle.N1, triangle.N2) > 0.5
 			triangle.Material = o.Materials[matName]
 			o.Triangles = append(o.Triangles, triangle)
 		}

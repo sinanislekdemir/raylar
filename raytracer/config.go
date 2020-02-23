@@ -45,7 +45,7 @@ var DEFAULT = Config{
 	RenderLights:             true,
 	RenderColors:             true,
 	RenderAmbientColors:      true,
-	RenderCaustics:           true,
+	RenderCaustics:           false,
 	AmbientColorSharingRatio: 0.5,
 	RenderReflections:        true,
 	RenderRefractions:        true,
