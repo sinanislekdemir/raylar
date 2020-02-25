@@ -18,5 +18,6 @@
  "render_caustics": false,
  "width": 1600,
  "height": 900,
- "edge_detect_threshold": 0.05
+ "edge_detect_threshold": 0.05,
+ "antialias_samples": 8
 }

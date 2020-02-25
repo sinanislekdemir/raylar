@@ -160,11 +160,20 @@ def export_object(obj):
 
 
 def export_light(light):
+    directional = False
+    direction = [0, 0, 0, 0]
+    if bpy.data.lights[light.name].type == 'SUN':
+        directional = True
+        lmw = light.matrix_world
+        direction = lmw.to_quaternion() @ Vector((0.0, 0.0, -1.0))
+
     return {
         "position": list(light.location),
         "color": list(bpy.data.lights[light.name].color),
         "active": True,
         "light_strength": bpy.data.lights[light.name].energy / 10,
+        "directional_light": directional,
+        "direction": direction
     }
 
 

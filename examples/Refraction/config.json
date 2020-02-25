@@ -14,5 +14,6 @@
     "ray_correction": 0.002,
     "width": 1600,
     "height": 900,
+    "antialias_samples": 8,
     "edge_detect_threshold": 0.02
 }

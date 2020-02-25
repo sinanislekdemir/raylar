@@ -53,7 +53,7 @@ func (o *Object) UnifyTriangles() {
 			triangle.N1 = o.Normals[face[0]]
 			triangle.N2 = o.Normals[face[1]]
 			triangle.N3 = o.Normals[face[2]]
-			triangle.Smooth = dot(triangle.N1, triangle.N2) > 0.5
+			triangle.Smooth = dot(triangle.N1, triangle.N2) > 0.49
 			triangle.Material = o.Materials[matName]
 			o.Triangles = append(o.Triangles, triangle)
 		}

@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 	"math"
+
+	"github.com/cheggaaa/pb"
 )
 
 func renderPixel(scene *Scene, x, y int) {
@@ -17,11 +19,13 @@ func renderPixel(scene *Scene, x, y int) {
 
 	bestHit = scene.Pixels[x][y].WorldLocation
 	if !bestHit.Hit {
-		pixel.Color = Vector{1, 1, 1, 1}
+		pixel.Color = Vector{1, 1, 1, 0}
+		pixel.Depth = -1
+		return
 	}
 
-	pixel.Color = bestHit.render(scene, 0)
 	pixel.Depth = bestHit.Dist
+	pixel.Color = bestHit.render(scene, 0)
 
 	if bestHit.Triangle != nil {
 		if GlobalConfig.RenderReflections && bestHit.Triangle.Material.Glossiness > 0 {
@@ -65,8 +69,10 @@ func renderImage(scene *Scene, image *image.RGBA) {
 	}
 
 	// Print pixels onto image
+	bar := pb.StartNew(scene.Width * scene.Height)
 	for i := 0; i < scene.Width; i++ {
 		for j := 0; j < scene.Height; j++ {
+			bar.Increment()
 			pcolor := scene.Pixels[i][j].Color
 			pcolor = getPixelColor(scene, i, j, pcolor)
 			colorRGBA := color.RGBA{
@@ -78,6 +84,7 @@ func renderImage(scene *Scene, image *image.RGBA) {
 			image.Set(i, j, colorRGBA)
 		}
 	}
+	bar.Finish()
 }
 
 func getPixelColor(scene *Scene, x, y int, pixelColor Vector) Vector {
@@ -86,10 +93,15 @@ func getPixelColor(scene *Scene, x, y int, pixelColor Vector) Vector {
 		return pixelColor
 	}
 
+	transparent := false
 	v := make([]PixelStorage, 0)
 	for i := -aaRadius; i <= aaRadius; i++ {
 		for j := -aaRadius; j <= aaRadius; j++ {
 			p := scene.Pixels[x+i][y+j]
+			if p.Depth == -1 {
+				transparent = true
+				continue
+			}
 			v = append(v, p)
 		}
 	}
@@ -102,13 +114,8 @@ func getPixelColor(scene *Scene, x, y int, pixelColor Vector) Vector {
 	maxDepth := v[0].Depth
 	minColor := vectorSum(v[0].Color)
 	maxColor := vectorSum(v[0].Color)
-	transparent := false
 
 	for i := range v {
-		if v[i].Depth <= 0 {
-			transparent = true
-			break
-		}
 		if v[i].Depth < minDepth {
 			minDepth = v[i].Depth
 		}
@@ -134,16 +141,28 @@ func getPixelColor(scene *Scene, x, y int, pixelColor Vector) Vector {
 		return pixelColor
 	}
 
-	totalColor := Vector{}
-	totalHits := 0.0
-	for i := range v {
-		if !math.IsNaN(v[i].Color[0]) {
-			totalColor = addVector(totalColor, v[i].Color)
-			totalHits += 1.0
-		}
-	}
+	return getPixel(scene, x, y)
+	// sw := scene.Width * 3
+	// sh := scene.Height * 3
+	// totalColor := Vector{}
+	// totalHits := 0.0
 
-	totalColor = scaleVector(totalColor, 1.0/totalHits)
-	totalColor[3] = 1
-	return totalColor
+	// for i := -1; i < 2; i++ {
+	// 	for j := -1; j < 2; j++ {
+	// 		if i < 0 || j < 0 || i >= sw || j >= sh {
+	// 			continue
+	// 		}
+	// 		xi := x*3 + i
+	// 		yi := y*3 + j
+	// 		rayDir := screenToWorld(xi, yi, sw, sh, scene.Observers[0].Position, *scene.Observers[0].Projection, scene.Observers[0].view)
+	// 		hit := raycastSceneIntersect(scene, scene.Observers[0].Position, rayDir)
+	// 		render := hit.render(scene, 0)
+	// 		totalColor = addVector(totalColor, render)
+	// 		totalHits += 1.0
+	// 	}
+	// }
+
+	// totalColor = scaleVector(totalColor, 1.0/totalHits)
+	// totalColor[3] = 1
+	// return totalColor
 }

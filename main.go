@@ -25,6 +25,7 @@ func main() {
 	top := flag.Int("top", 0, "Top")
 	bottom := flag.Int("bottom", 0, "Bottom")
 	profiling := flag.Bool("profile", false, "Set 1 for debugging")
+	mergeAll := flag.Bool("mergeall", false, "Merge all meshes into a single mesh")
 	showHelp := flag.Bool("help", false, "Show help!")
 	createConfig := flag.Bool("createconfig", false, "Create config")
 	flag.Parse()
@@ -33,6 +34,7 @@ func main() {
 		fmt.Println("--config <config.json>  : Render configurations")
 		fmt.Println("--output <out.png>      : Output image filename")
 		fmt.Println("--percent <percent>     : Render Percentage")
+		fmt.Println("--mergeall              : Merge all meshes into a big one mesh (Can improve render time but harder to debug - Experimental)")
 		fmt.Println("--profile               : Turn on profiling for golang")
 		fmt.Println("--size <width>x<height> : Set width x height explicitly, overwriting config. 1600x900 eg.")
 		fmt.Println("--createconfig          : Create a default config.json to modify scene parameters")
@@ -58,7 +60,7 @@ func main() {
 		log.Printf("Created config.json")
 		os.Exit(0)
 	}
-	err := s.Init(*sceneFile, *configFile)
+	err := s.Init(*sceneFile, *configFile, *mergeAll)
 	if err != nil {
 		log.Fatal(err.Error())
 		os.Exit(128)

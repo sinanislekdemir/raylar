@@ -21,7 +21,7 @@ type Light struct {
 	Active        bool    `json:"active"`
 	LightStrength float64 `json:"light_strength"`
 	Directional   bool    `json:"directional_light"`
-	direction     Vector
+	Direction     Vector  `json:"direction"`
 }
 
 // Observer -
@@ -41,26 +41,16 @@ type Observer struct {
 	height      int
 }
 
-// Stats of the scene
-type Stats struct {
-	NumberOfVertices  int64
-	NumberOfMaterials int64
-	NumberOfIndices   int64
-	NumberOfTriangles int64
-}
-
 // PixelStorage to Store pixel information before turning it into a png
 // we need to do this for post-processing.
 type PixelStorage struct {
-	WorldLocation        IntersectionTriangle
-	DirectLightEnergy    Vector
-	AmbientOcclusionRate float64
-	Color                Vector
-	AmbientColor         Vector
-	TotalLight           Vector
-	Depth                float64
-	X                    int
-	Y                    int
+	WorldLocation     IntersectionTriangle
+	DirectLightEnergy Vector
+	Color             Vector
+	AmbientColor      Vector
+	Depth             float64
+	X                 int
+	Y                 int
 }
 
 // Scene -
@@ -69,19 +59,16 @@ type Scene struct {
 	Lights         []Light            `json:"lights"`
 	Observers      []Observer         `json:"observers"`
 	ImageMap       map[string]image.Image
-	Stats          Stats
 	Pixels         [][]PixelStorage
 	Width          int
 	Height         int
 	ShortRadius    float64
-	OpenScene      bool
 	InputFilename  string
 	OutputFilename string
-	LitTriangles   []*Triangle
 }
 
 // Init scene
-func (s *Scene) Init(sceneFile string, configFile string) error {
+func (s *Scene) Init(sceneFile string, configFile string, mergeAll bool) error {
 	log.Print("Initializing the scene")
 	if configFile == "" {
 		log.Print("No config set, setting defaults")
@@ -92,10 +79,11 @@ func (s *Scene) Init(sceneFile string, configFile string) error {
 			return err
 		}
 	}
-	return s.loadJSON(sceneFile)
+	GlobalConfig.MergeAll = mergeAll
+	return s.loadJSON(sceneFile, mergeAll)
 }
 
-func (s *Scene) loadJSON(jsonFile string) error {
+func (s *Scene) loadJSON(jsonFile string, mergeAll bool) error {
 	start := time.Now()
 	log.Printf("Loading file: %s\n", jsonFile)
 	file, err := ioutil.ReadFile(jsonFile)
@@ -116,8 +104,29 @@ func (s *Scene) loadJSON(jsonFile string) error {
 		obj.calcRadius()
 		s.Objects[name] = obj
 	}
+
 	log.Printf("Loaded scene in %f seconds\n", time.Since(start).Seconds())
 	return nil
+}
+
+func (s *Scene) mergeAll() {
+	gigaMesh := Object{
+		Matrix: identityHmgMatrix,
+	}
+	gigaMesh.Materials = make(map[string]Material)
+	gigaMesh.Triangles = make([]Triangle, 0)
+	for obj := range s.Objects {
+		for k, m := range s.Objects[obj].Materials {
+			gigaMesh.Materials[k] = m
+		}
+		gigaMesh.Triangles = append(gigaMesh.Triangles, s.Objects[obj].Triangles...)
+	}
+	gigaMesh.Root.getBoundingBox()
+	gigaMesh.calcRadius()
+	log.Printf("Build KDTree")
+	gigaMesh.KDTree()
+	log.Printf("Built %d nodes with %d max depth, object ready", totalNodes, maxDepth)
+	s.Objects = map[string]*Object{"Scene": &gigaMesh}
 }
 
 func (s *Scene) prepare(width, height int) {
@@ -127,10 +136,12 @@ func (s *Scene) prepare(width, height int) {
 	log.Printf("Init scene")
 	s.flatten()
 	s.processObjects()
+	if GlobalConfig.MergeAll {
+		s.mergeAll()
+	}
 	s.parseMaterials()
 	s.fixLightPos()
 	s.ambientOcclusion()
-	s.calcStats()
 	s.loadLights()
 	s.prepareMatrices()
 	s.scanPixels()
@@ -204,7 +215,7 @@ func (s *Scene) loadLights() {
 	}
 	for l := range s.Lights {
 		if s.Lights[l].Directional {
-			s.Lights[l].direction = scaleVector(normalizeVector(s.Lights[l].Position), -1)
+			s.Lights[l].Direction = scaleVector(normalizeVector(s.Lights[l].Position), -1)
 		}
 	}
 }
@@ -224,14 +235,6 @@ func (s *Scene) ambientOcclusion() {
 		dia = bb.MaxExtend[2] - bb.MinExtend[2]
 	}
 	s.ShortRadius = dia / 2.0
-	cast := raycastSceneIntersect(s, s.Observers[0].Position, s.Observers[0].Up)
-	s.OpenScene = !cast.Hit
-	log.Printf("Ambient max radius: %f", s.ShortRadius)
-	if s.OpenScene {
-		log.Print("Exterior Scene")
-	} else {
-		log.Print("Interior Scene")
-	}
 }
 
 // Lights have 0 as w but they are not vectors, they are positions;
@@ -288,29 +291,6 @@ func (s *Scene) flatten() {
 	s.Objects = flattenSceneObjects(s.Objects)
 }
 
-func (s *Scene) calcStats() {
-	nov := int(0)
-	noi := int(0)
-	nom := int(0)
-	not := int(0)
-	for k := range s.Objects {
-		nov += len(s.Objects[k].Vertices)
-		for m := range s.Objects[k].Materials {
-			noi += len(s.Objects[k].Materials[m].Indices)
-			nom++
-		}
-		not += len(s.Objects[k].Triangles)
-	}
-	s.Stats.NumberOfVertices = int64(nov)
-	s.Stats.NumberOfIndices = int64(noi)
-	s.Stats.NumberOfMaterials = int64(nom)
-	s.Stats.NumberOfTriangles = int64(not)
-	log.Printf("Number of vertices: %d\n", nov)
-	log.Printf("Number of indices: %d\n", noi)
-	log.Printf("Number of materials: %d\n", nom)
-	log.Printf("Number of triangles: %d\n", not)
-}
-
 // Flatten Scene Objects and move them to root
 // So, we won't have to multiply matrices each time
 func flattenSceneObjects(objects map[string]*Object) map[string]*Object {
@@ -343,9 +323,11 @@ func (s *Scene) processObjects() {
 		}
 		log.Printf("Unify triangles")
 		obj.UnifyTriangles()
-		log.Printf("Build KDTree")
-		obj.KDTree()
-		log.Printf("Built %d nodes with %d max depth, object ready", totalNodes, maxDepth)
+		if !GlobalConfig.MergeAll {
+			log.Printf("Build KDTree")
+			obj.KDTree()
+			log.Printf("Built %d nodes with %d max depth, object ready", totalNodes, maxDepth)
+		}
 		totalNodes = 0
 		maxDepth = 0
 		s.Objects[k] = obj

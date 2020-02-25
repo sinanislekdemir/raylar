@@ -28,6 +28,8 @@ type Config struct {
 	Width                    int     `json:"width"`
 	Height                   int     `json:"height"`
 	EdgeDetechThreshold      float64 `json:"edge_detect_threshold"`
+	MergeAll                 bool    `json:"merge_all"`
+	AntialiasSamples         int     `json:"antialias_samples"`
 }
 
 var DEFAULT = Config{
@@ -52,6 +54,8 @@ var DEFAULT = Config{
 	Width:                    1600,
 	Height:                   900,
 	EdgeDetechThreshold:      0.2,
+	MergeAll:                 false,
+	AntialiasSamples:         8,
 }
 
 var GlobalConfig = Config{}
