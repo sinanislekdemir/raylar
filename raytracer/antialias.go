@@ -9,6 +9,9 @@ func getPixel(scene *Scene, x, y int) Vector {
 	if GlobalConfig.AntialiasSamples > 64 {
 		GlobalConfig.AntialiasSamples = 64
 	}
+	if GlobalConfig.AntialiasSamples == 0 {
+		return scene.Pixels[x][y].Color
+	}
 	sw := scene.Width * 8
 	sh := scene.Height * 8
 	totalColor := Vector{}

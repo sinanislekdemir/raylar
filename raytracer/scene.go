@@ -213,11 +213,6 @@ func (s *Scene) loadLights() {
 			}
 		}
 	}
-	for l := range s.Lights {
-		if s.Lights[l].Directional {
-			s.Lights[l].Direction = scaleVector(normalizeVector(s.Lights[l].Position), -1)
-		}
-	}
 }
 
 func (s *Scene) ambientOcclusion() {

@@ -153,10 +153,6 @@ func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *In
 }
 
 func raycastObjectIntersect(object *Object, rayStart, rayDir *Vector) (intersection IntersectionTriangle) {
-	// if !raycastSphereIntersect(rayStart, rayDir, object.Matrix[3], object.radius) {
-	// 	// early exit
-	// 	return
-	// }
 	intersection.Dist = -1
 	raycastNodeIntersect(rayStart, rayDir, &object.Root, &intersection)
 	return

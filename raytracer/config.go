@@ -39,7 +39,7 @@ var DEFAULT = Config{
 	CausticsSamplerLimit:     10000,
 	PhotonSpacing:            0.005,
 	Exposure:                 0.2,
-	MaxReflectionDepth:       6,
+	MaxReflectionDepth:       3,
 	RayCorrection:            0.002,
 	OcclusionRate:            0.2,
 	AmbientRadius:            2.1,

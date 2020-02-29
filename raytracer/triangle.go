@@ -1,6 +1,8 @@
 package raytracer
 
-import "math"
+import (
+	"math"
+)
 
 // Triangle definition
 // raycasting is already expensive and trying to calculate the triangle
@@ -86,13 +88,20 @@ func (i *IntersectionTriangle) getNormal() {
 
 	u, v, w, _ := barycentricCoordinates(i.Triangle.P1, i.Triangle.P2, i.Triangle.P3, i.Intersection)
 
-	a := scaleVector(i.Triangle.N1, u)
-	b := scaleVector(i.Triangle.N2, v)
-	c := scaleVector(i.Triangle.N3, w)
-	normal := normalizeVector(addVector(addVector(a, b), c))
-	if !sameSideTest(normal, i.IntersectionNormal, 0) {
-		normal = scaleVector(normal, -1)
+	N1 := i.Triangle.N1
+	N2 := i.Triangle.N2
+	N3 := i.Triangle.N3
+	if !sameSideTest(N1, i.IntersectionNormal, 0) {
+		N1 = scaleVector(N1, -1)
+		N2 = scaleVector(N2, -1)
+		N3 = scaleVector(N3, -1)
 	}
+
+	a := scaleVector(N1, u)
+	b := scaleVector(N2, v)
+	c := scaleVector(N3, w)
+	normal := normalizeVector(addVector(addVector(a, b), c))
+
 	i.IntersectionNormal = normal
 }
 
@@ -106,28 +115,29 @@ func (i *IntersectionTriangle) render(scene *Scene, depth int) Vector {
 
 	samples := ambientSampling(scene, i)
 
-	ambientRate := GlobalConfig.OcclusionRate
 	light := Vector{}
 	if GlobalConfig.RenderLights {
 		light = i.getDirectLight(scene, depth)
-		if GlobalConfig.RenderOcclusion {
-			light = upscaleVector(light, ambientRate)
-		}
+		// if GlobalConfig.RenderOcclusion {
+		// 	light = upscaleVector(light, GlobalConfig.OcclusionRate)
+		// }
 	}
+
 	if GlobalConfig.RenderOcclusion {
 		aRate := ambientLightCalc(scene, i, samples, GlobalConfig.SamplerLimit)
-		aRate *= ambientRate
-		occLight := Vector{
+		aRate *= GlobalConfig.OcclusionRate
+
+		light = Vector{
 			light[0] + aRate,
 			light[1] + aRate,
 			light[2] + aRate,
 			1,
 		}
-		if vectorLength(light) > 0 {
-			light = limitVectorByVector(occLight, light)
-		} else {
-			light = occLight
-		}
+		// if vectorLength(light) > 0 {
+		// 	light = limitVectorByVector(occLight, light)
+		// } else {
+		// 	light = occLight
+		// }
 	}
 
 	color := i.getColor(scene, depth)

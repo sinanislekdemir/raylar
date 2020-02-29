@@ -8,6 +8,54 @@ import (
 	"math"
 )
 
+func calculateDirectionalLight(scene *Scene, intersection *IntersectionTriangle, light *Light, depth int) (result Vector) {
+	var shortestIntersection IntersectionTriangle
+	if !intersection.Hit {
+		return
+	}
+
+	lightD := scaleVector(light.Direction, -1)
+
+	dotP := dot(intersection.IntersectionNormal, lightD)
+	if dotP < 0 {
+		return
+	}
+
+	samples := sampleSphere(0.2, GlobalConfig.LightSampleCount)
+	totalHits := 0.0
+	totalLight := Vector{}
+
+	for i := range samples {
+		rayStart := scaleVector(lightD, 999999999999)
+		rayStart = addVector(rayStart, intersection.Intersection)
+		rayStart = addVector(rayStart, samples[i])
+		dir := normalizeVector(subVector(intersection.Intersection, rayStart))
+
+		shortestIntersection = raycastSceneIntersect(scene, rayStart, dir)
+		if (shortestIntersection.Triangle != nil && shortestIntersection.Triangle.id == intersection.Triangle.id) || shortestIntersection.Dist < DIFF {
+			if !sameSideTest(intersection.IntersectionNormal, shortestIntersection.IntersectionNormal, 0) {
+				return
+			}
+
+			intensity := dotP * light.LightStrength
+			intensity *= GlobalConfig.Exposure
+
+			totalLight = addVector(totalLight, Vector{
+				light.Color[0] * intensity,
+				light.Color[1] * intensity,
+				light.Color[2] * intensity,
+				intensity,
+			})
+			totalHits += 1.0
+		}
+	}
+	if totalHits > 0 {
+		return scaleVector(totalLight, totalHits/float64(GlobalConfig.LightSampleCount))
+	}
+
+	return
+}
+
 // Calculate light for given light source.
 // Result will be used to calculate "avarage" of the pixel color
 func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Light, depth int) (result Vector) {
@@ -40,13 +88,6 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 	rayStart := light.Position
 	rayLength := vectorDistance(intersection.Intersection, light.Position)
 
-	intensity := (1 / (rayLength * rayLength)) * GlobalConfig.Exposure
-	intensity *= dotP * light.LightStrength
-
-	if intersection.Triangle.Material.LightStrength > 0 {
-		intensity = intersection.Triangle.Material.LightStrength * GlobalConfig.Exposure
-	}
-
 	shortestIntersection = raycastSceneIntersect(scene, rayStart, rayDir)
 	s := math.Abs(rayLength - shortestIntersection.Dist)
 
@@ -54,6 +95,14 @@ func calculateLight(scene *Scene, intersection *IntersectionTriangle, light *Lig
 		if !sameSideTest(intersection.IntersectionNormal, shortestIntersection.IntersectionNormal, 0) {
 			return
 		}
+
+		intensity := (1 / (rayLength * rayLength)) * GlobalConfig.Exposure
+		intensity *= dotP * light.LightStrength
+
+		if intersection.Triangle.Material.LightStrength > 0 {
+			intensity = intersection.Triangle.Material.LightStrength * GlobalConfig.Exposure
+		}
+
 		return Vector{
 			light.Color[0] * intensity,
 			light.Color[1] * intensity,
@@ -78,7 +127,11 @@ func calculateTotalLight(scene *Scene, intersection *IntersectionTriangle, depth
 
 	for i := range scene.Lights {
 		go func(scene *Scene, intersection *IntersectionTriangle, light *Light, depth int, lightChan chan Vector) {
-			lightChan <- calculateLight(scene, intersection, light, depth)
+			if light.Directional {
+				lightChan <- calculateDirectionalLight(scene, intersection, light, depth)
+			} else {
+				lightChan <- calculateLight(scene, intersection, light, depth)
+			}
 		}(scene, intersection, &scene.Lights[i], depth, lightChan)
 	}
 

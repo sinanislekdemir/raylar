@@ -6,7 +6,7 @@ var totalNodes = 0
 var maxDepth = 0
 var idCounter int64 = 0
 
-type indice [3]int64
+type indice [4]int64
 
 // Material -
 type Material struct {
@@ -50,10 +50,12 @@ func (o *Object) UnifyTriangles() {
 				triangle.T2 = o.TexCoords[face[1]]
 				triangle.T3 = o.TexCoords[face[2]]
 			}
+
 			triangle.N1 = o.Normals[face[0]]
 			triangle.N2 = o.Normals[face[1]]
 			triangle.N3 = o.Normals[face[2]]
-			triangle.Smooth = dot(triangle.N1, triangle.N2) > 0.49
+
+			triangle.Smooth = face[3] == 1
 			triangle.Material = o.Materials[matName]
 			o.Triangles = append(o.Triangles, triangle)
 		}

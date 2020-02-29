@@ -141,7 +141,8 @@ def export_object(obj):
                     material_cache[mat]["indices"] = []
                 material_cache[mat]["indices"].append([index,
                                                        index + 1,
-                                                       index + 2])
+                                                       index + 2,
+                                                       int(face.smooth)])
         index += 3
 
     obj_dict = {
@@ -173,7 +174,7 @@ def export_light(light):
         "active": True,
         "light_strength": bpy.data.lights[light.name].energy / 10,
         "directional_light": directional,
-        "direction": direction
+        "direction": list(direction)
     }
 
 

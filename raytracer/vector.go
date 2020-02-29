@@ -30,7 +30,7 @@ type Vector [4]float64
 // }
 
 func sameSideTest(v1, v2 Vector, shifting float64) bool {
-	return dot(v1, v2)-shifting > 0
+	return dot(v1, v2)-shifting > -DIFF
 }
 
 // subVector -

@@ -42,6 +42,19 @@ func createSamples(normal Vector, limit int, shifting float64) []Vector {
 	return result
 }
 
+func sampleSphere(radius float64, limit int) []Vector {
+	result := make([]Vector, limit)
+	for i := 0; i < limit; i++ {
+		result[i] = Vector{
+			(rand.Float64() - 0.5) * radius,
+			(rand.Float64() - 0.5) * radius,
+			(rand.Float64() - 0.5) * radius,
+			1,
+		}
+	}
+	return result
+}
+
 func sampleTriangle(triangle Triangle, count int) []Vector {
 	result := make([]Vector, count)
 	for i := 0; i < count; i++ {
