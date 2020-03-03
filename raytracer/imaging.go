@@ -9,9 +9,9 @@ import (
 )
 
 func renderPixel(scene *Scene, x, y int) {
-	var bestHit IntersectionTriangle
+	var bestHit Intersection
 	var pixel PixelStorage
-	// var samples []IntersectionTriangle
+
 	pixel.X = x
 	pixel.Y = y
 
@@ -92,6 +92,9 @@ func getPixelColor(scene *Scene, x, y int, pixelColor Vector) Vector {
 	if x < aaRadius || x+aaRadius >= scene.Width || y < aaRadius || y+aaRadius >= scene.Height {
 		return pixelColor
 	}
+	if GlobalConfig.Percentage < 100 {
+		return pixelColor
+	}
 
 	transparent := false
 	v := make([]PixelStorage, 0)
@@ -142,27 +145,4 @@ func getPixelColor(scene *Scene, x, y int, pixelColor Vector) Vector {
 	}
 
 	return getPixel(scene, x, y)
-	// sw := scene.Width * 3
-	// sh := scene.Height * 3
-	// totalColor := Vector{}
-	// totalHits := 0.0
-
-	// for i := -1; i < 2; i++ {
-	// 	for j := -1; j < 2; j++ {
-	// 		if i < 0 || j < 0 || i >= sw || j >= sh {
-	// 			continue
-	// 		}
-	// 		xi := x*3 + i
-	// 		yi := y*3 + j
-	// 		rayDir := screenToWorld(xi, yi, sw, sh, scene.Observers[0].Position, *scene.Observers[0].Projection, scene.Observers[0].view)
-	// 		hit := raycastSceneIntersect(scene, scene.Observers[0].Position, rayDir)
-	// 		render := hit.render(scene, 0)
-	// 		totalColor = addVector(totalColor, render)
-	// 		totalHits += 1.0
-	// 	}
-	// }
-
-	// totalColor = scaleVector(totalColor, 1.0/totalHits)
-	// totalColor[3] = 1
-	// return totalColor
 }

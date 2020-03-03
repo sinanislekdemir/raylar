@@ -2,13 +2,10 @@ package raytracer
 
 import (
 	"encoding/json"
-	"image"
 	_ "image/jpeg" // fuck you go-linter
 	_ "image/png"  // fuck you go-linter
 	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/cheggaaa/pb"
@@ -44,7 +41,7 @@ type Observer struct {
 // PixelStorage to Store pixel information before turning it into a png
 // we need to do this for post-processing.
 type PixelStorage struct {
-	WorldLocation     IntersectionTriangle
+	WorldLocation     Intersection
 	DirectLightEnergy Vector
 	Color             Vector
 	AmbientColor      Vector
@@ -58,7 +55,6 @@ type Scene struct {
 	Objects        map[string]*Object `json:"objects"`
 	Lights         []Light            `json:"lights"`
 	Observers      []Observer         `json:"observers"`
-	ImageMap       map[string]image.Image
 	Pixels         [][]PixelStorage
 	Width          int
 	Height         int
@@ -174,6 +170,9 @@ func (scene *Scene) scanPixels() {
 	scene.Pixels = make([][]PixelStorage, scene.Width)
 	for i := 0; i < scene.Width; i++ {
 		scene.Pixels[i] = make([]PixelStorage, scene.Height)
+		for j := 0; j < scene.Height; j++ {
+			scene.Pixels[i][j].Color = GlobalConfig.TransparentColor
+		}
 	}
 
 	for i := 0; i < scene.Width; i++ {
@@ -237,47 +236,6 @@ func (s *Scene) ambientOcclusion() {
 func (s *Scene) fixLightPos() {
 	for i := range s.Lights {
 		s.Lights[i].Position[3] = 1.0
-	}
-}
-
-// Parse all material images and store them in scene object
-// so we won't have to open and read for each pixel.
-// TODO: Free material image if it is not being used.
-// TODO: This method is complex and has more than one responsibility
-// NOTE: This function assumes that objects are already flattened!
-func (s *Scene) parseMaterials() {
-	log.Printf("Parse material textures\n")
-	s.ImageMap = make(map[string]image.Image)
-	for k := range s.Objects {
-		for m := range s.Objects[k].Materials {
-			mat := s.Objects[k].Materials[m]
-			if _, ok := s.ImageMap[mat.Texture]; ok {
-				continue
-			}
-			if mat.Texture != "" {
-				texFile := mat.Texture
-				_, err := os.Stat(texFile)
-				if os.IsNotExist(err) {
-					scenePath := filepath.Dir(s.InputFilename)
-					texFile = filepath.Join(scenePath, mat.Texture)
-				}
-				inFile, err := os.Open(texFile)
-				if err != nil {
-					log.Printf("Material texture [%s] can't be opened for material [%s]\n", mat.Texture, m)
-					inFile.Close()
-					continue
-				}
-				src, _, err := image.Decode(inFile)
-				if err != nil {
-					log.Printf("Error reading image file [%s]: [%s]\n", mat.Texture, err.Error())
-					inFile.Close()
-					continue
-				}
-				log.Printf("Image %s loaded", mat.Texture)
-				s.ImageMap[mat.Texture] = src
-				inFile.Close()
-			}
-		}
 	}
 }
 

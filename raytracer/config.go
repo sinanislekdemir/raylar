@@ -21,6 +21,7 @@ type Config struct {
 	RenderColors             bool    `json:"render_colors"`
 	RenderAmbientColors      bool    `json:"render_ambient_color"`
 	RenderCaustics           bool    `json:"render_caustics"`
+	RenderBumpMap            bool    `json:"render_bump_map"`
 	AmbientColorSharingRatio float64 `json:"ambient_color_ratio"`
 	RenderReflections        bool    `json:"render_reflections"`
 	RenderRefractions        bool    `json:"render_refractions"`
@@ -30,6 +31,8 @@ type Config struct {
 	EdgeDetechThreshold      float64 `json:"edge_detect_threshold"`
 	MergeAll                 bool    `json:"merge_all"`
 	AntialiasSamples         int     `json:"antialias_samples"`
+	TransparentColor         Vector  `json:"transparent_color"`
+	Percentage               int
 }
 
 var DEFAULT = Config{
@@ -48,6 +51,7 @@ var DEFAULT = Config{
 	RenderColors:             true,
 	RenderAmbientColors:      true,
 	RenderCaustics:           false,
+	RenderBumpMap:            true,
 	AmbientColorSharingRatio: 0.5,
 	RenderReflections:        true,
 	RenderRefractions:        true,
@@ -56,6 +60,8 @@ var DEFAULT = Config{
 	EdgeDetechThreshold:      0.2,
 	MergeAll:                 false,
 	AntialiasSamples:         8,
+	TransparentColor:         Vector{0, 0, 0, 0},
+	Percentage:               100,
 }
 
 var GlobalConfig = Config{}

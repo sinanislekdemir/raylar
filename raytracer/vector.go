@@ -7,28 +7,6 @@ import (
 // Vector definition
 type Vector [4]float64
 
-// func degToRad(degrees float64) float64 {
-// 	return degrees * (math.Pi / 180.0)
-// }
-
-// func radToDeg(radians float64) float64 {
-// 	return radians * (180.0 / math.Pi)
-// }
-
-// func vecToSpherical(v Vector) (r, phi, theta float64) {
-// 	r = vectorLength(v)
-// 	phi = math.Atan(v[1] / v[0])
-// 	theta = math.Acos(v[2] / r)
-// 	return
-// }
-
-// func sphericalToVec(r, phi, theta float64) (v Vector) {
-// 	v[0] = r * math.Sin(theta) * math.Cos(phi)
-// 	v[1] = r * math.Sin(theta) * math.Sin(phi)
-// 	v[2] = r * math.Cos(theta)
-// 	return
-// }
-
 func sameSideTest(v1, v2 Vector, shifting float64) bool {
 	return dot(v1, v2)-shifting > -DIFF
 }
@@ -67,26 +45,6 @@ func limitVector(v Vector, factor float64) Vector {
 	for i := 0; i < 3; i++ {
 		if result[i] > factor {
 			result[i] = factor
-		}
-	}
-	return result
-}
-
-func upscaleVector(v Vector, factor float64) Vector {
-	result := Vector{v[0], v[1], v[2], v[3]}
-	for i := 0; i < 3; i++ {
-		if result[i] < factor {
-			result[i] = factor
-		}
-	}
-	return result
-}
-
-func limitVectorByVector(v, factor Vector) Vector {
-	result := Vector{v[0], v[1], v[2], v[3]}
-	for i := 0; i < 3; i++ {
-		if result[i] > factor[i] {
-			result[i] = factor[i]
 		}
 	}
 	return result

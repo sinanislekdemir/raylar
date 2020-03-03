@@ -66,5 +66,6 @@ func main() {
 		os.Exit(128)
 	}
 	log.Printf("Render %d percent of the image", *percent)
+	raytracer.GlobalConfig.Percentage = *percent
 	_ = raytracer.Render(&s, *left, *right, *top, *bottom, *percent, size)
 }

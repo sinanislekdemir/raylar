@@ -8,7 +8,7 @@ import bpy
 import mathutils
 from bpy.props import StringProperty
 from bpy.types import Operator
-from shutil import copyfile
+from shutil import copyfile, SameFileError
 
 
 # ExportHelper is a helper class, defines filename and
@@ -41,7 +41,10 @@ def write_raylar_data(filepath):
 
     for f in global_assets:
         base_name = os.path.basename(f)
-        copyfile(f, os.path.join(target_path, base_name))
+        try:
+            copyfile(f, os.path.join(target_path, base_name))
+        except SameFileError:
+            pass
     global_assets = []
 
     return {"FINISHED"}

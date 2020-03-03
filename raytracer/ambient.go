@@ -1,7 +1,7 @@
 package raytracer
 
 // Calculate light reflecting from other objects
-func ambientLightCalc(scene *Scene, intersection *IntersectionTriangle, samples []IntersectionTriangle, totalDirs int) (result float64) {
+func ambientLightCalc(scene *Scene, intersection *Intersection, samples []Intersection, totalDirs int) (result float64) {
 	totalHits := 0.0
 	rad := scene.ShortRadius
 	if GlobalConfig.AmbientRadius > 0 {
@@ -17,7 +17,7 @@ func ambientLightCalc(scene *Scene, intersection *IntersectionTriangle, samples 
 	return result
 }
 
-func ambientColor(scene *Scene, intersection *IntersectionTriangle, samples []IntersectionTriangle, totalDirs int) (result Vector) {
+func ambientColor(scene *Scene, intersection *Intersection, samples []Intersection, totalDirs int) (result Vector) {
 	if !intersection.Hit {
 		return Vector{}
 	}
@@ -39,16 +39,16 @@ func ambientColor(scene *Scene, intersection *IntersectionTriangle, samples []In
 	return scaleVector(totalColor, 1.0/totalHits)
 }
 
-func ambientSampling(scene *Scene, intersection *IntersectionTriangle) []IntersectionTriangle {
+func ambientSampling(scene *Scene, intersection *Intersection) []Intersection {
 	sampleDirs := createSamples(intersection.IntersectionNormal, GlobalConfig.SamplerLimit, 0)
-	hitChannel := make(chan IntersectionTriangle, len(sampleDirs))
+	hitChannel := make(chan Intersection, len(sampleDirs))
 	for i := range sampleDirs {
-		go func(scene *Scene, intersection *IntersectionTriangle, dir Vector, channel chan IntersectionTriangle) {
+		go func(scene *Scene, intersection *Intersection, dir Vector, channel chan Intersection) {
 			hit := raycastSceneIntersect(scene, intersection.Intersection, dir)
 			channel <- hit
 		}(scene, intersection, sampleDirs[i], hitChannel)
 	}
-	samples := make([]IntersectionTriangle, 0, len(sampleDirs))
+	samples := make([]Intersection, 0, len(sampleDirs))
 	for i := 0; i < len(sampleDirs); i++ {
 		hit := <-hitChannel
 		if hit.Hit && hit.Triangle.id != intersection.Triangle.id {

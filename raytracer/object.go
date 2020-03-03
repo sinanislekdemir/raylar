@@ -6,21 +6,6 @@ var totalNodes = 0
 var maxDepth = 0
 var idCounter int64 = 0
 
-type indice [4]int64
-
-// Material -
-type Material struct {
-	Color             Vector   `json:"color"`
-	Texture           string   `json:"texture"`
-	Transmission      float64  `json:"transmission"`
-	IndexOfRefraction float64  `json:"index_of_refraction"`
-	Indices           []indice `json:"indices"`
-	Glossiness        float64  `json:"glossiness"`
-	Roughness         float64  `json:"roughness"`
-	Light             bool     `json:"light"`
-	LightStrength     float64  `json:"light_strength"`
-}
-
 // Object -
 type Object struct {
 	Vertices  []Vector            `json:"vertices"`

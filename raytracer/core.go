@@ -36,7 +36,7 @@ func Render(scene *Scene, left, right, top, bottom, percent int, size *string) e
 	start := time.Now()
 
 	upLeft := image.Point{0, 0}
-	log.Printf("Output image size: %d x %d\n", width, height)
+	log.Printf("Initial rendering: %d x %d\n", width, height)
 	lowRight := image.Point{width, height}
 
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
@@ -77,7 +77,7 @@ func Render(scene *Scene, left, right, top, bottom, percent int, size *string) e
 	bar.Finish()
 
 	log.Printf("Rendered scene in %f seconds\n", time.Since(start).Seconds())
-	log.Printf("Post processing and saving file")
+	log.Printf("Second pass for antialiasing and image generation")
 	renderImage(scene, img)
 	// Encode as PNG.
 	f, _ := os.Create(scene.OutputFilename)

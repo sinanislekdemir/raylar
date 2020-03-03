@@ -61,6 +61,28 @@ func raycastTriangleIntersect(start, vector, p1, p2, p3 *Vector) (intersection, 
 	return
 }
 
+// This is the branchless check but it doesn't help much with the performance.
+// func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) bool {
+// 	inv := Vector{
+// 		1.0 / rayVector[0],
+// 		1.0 / rayVector[1],
+// 		1.0 / rayVector[2],
+// 	}
+// 	t1 := (boundingBox.MinExtend[0] - rayStart[0]) * inv[0]
+// 	t2 := (boundingBox.MaxExtend[0] - rayStart[0]) * inv[0]
+
+// 	tmin := math.Min(t1, t2)
+// 	tmax := math.Max(t1, t2)
+// 	for i := 1; i < 3; i++ {
+// 		t1 = (boundingBox.MinExtend[i] - rayStart[i]) * inv[i]
+// 		t2 = (boundingBox.MaxExtend[i] - rayStart[i]) * inv[i]
+
+// 		tmin = math.Max(tmin, math.Min(t1, t2))
+// 		tmax = math.Min(tmax, math.Max(t1, t2))
+// 	}
+// 	return tmax > math.Max(tmin, 0)
+// }
+
 func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) bool {
 	right := 0.0
 	left := 1.0
@@ -70,6 +92,7 @@ func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) 
 	whichPlane := 0
 	maxT := Vector{}
 	candidatePlane := Vector{}
+
 	for i := 0; i < 3; i++ {
 		if rayStart[i] < boundingBox.MinExtend[i] {
 			quadrant[i] = left
@@ -83,6 +106,7 @@ func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) 
 			quadrant[i] = middle
 		}
 	}
+
 	if inside {
 		return true
 	}
@@ -116,7 +140,7 @@ func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) 
 	return true
 }
 
-func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *IntersectionTriangle) {
+func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *Intersection) {
 	if !raycastBoxIntersect(rayStart, rayDir, node.getBoundingBox()) {
 		return
 	}
@@ -152,22 +176,22 @@ func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *In
 	}
 }
 
-func raycastObjectIntersect(object *Object, rayStart, rayDir *Vector) (intersection IntersectionTriangle) {
+func raycastObjectIntersect(object *Object, rayStart, rayDir *Vector) (intersection Intersection) {
 	intersection.Dist = -1
 	raycastNodeIntersect(rayStart, rayDir, &object.Root, &intersection)
 	return
 }
 
-func raycastSceneIntersect(scene *Scene, position, ray Vector) IntersectionTriangle {
-	var bestHit IntersectionTriangle
+func raycastSceneIntersect(scene *Scene, position, ray Vector) Intersection {
+	var bestHit Intersection
 	var bestDist float64
 
 	bestDist = -1
 
 	position = addVector(position, scaleVector(ray, GlobalConfig.RayCorrection))
-	intersectChannel := make(chan IntersectionTriangle, len(scene.Objects))
+	intersectChannel := make(chan Intersection, len(scene.Objects))
 	for k := range scene.Objects {
-		go func(object *Object, name string, position, ray Vector, c chan IntersectionTriangle) {
+		go func(object *Object, name string, position, ray Vector, c chan Intersection) {
 			result := raycastObjectIntersect(object, &position, &ray)
 			result.ObjectName = name
 			c <- result
