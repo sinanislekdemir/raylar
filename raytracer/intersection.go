@@ -264,7 +264,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 		}
 	}
 
-	if i.Triangle.Material.Glossiness > 0 {
+	if i.Triangle.Material.Glossiness > 0 && GlobalConfig.RenderReflections {
 		// Do the reflection!
 		collColor := Vector{}
 		colChan := make(chan Vector, len(dirs))
@@ -289,7 +289,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 			1,
 		}
 	}
-	if i.Triangle.Material.Transmission > 0 {
+	if i.Triangle.Material.Transmission > 0 && GlobalConfig.RenderRefractions {
 		// Do the refraction!
 		collColor := Vector{}
 		colChan := make(chan Vector, len(dirs))

@@ -82,14 +82,13 @@ func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *
 // Calculate light for given light source.
 // Result will be used to calculate "avarage" of the pixel color
 func calculateLight(scene *Scene, intersection *Intersection, light *Light, depth int) (result Vector) {
-	var shortestIntersection Intersection
-
 	if !intersection.Hit {
 		return
 	}
 
 	l1 := normalizeVector(subVector(light.Position, intersection.Intersection))
 	l2 := intersection.IntersectionNormal
+
 	dotP := dot(l2, l1)
 	if dotP < 0 {
 		return
@@ -108,10 +107,9 @@ func calculateLight(scene *Scene, intersection *Intersection, light *Light, dept
 	}
 
 	rayDir := normalizeVector(subVector(intersection.Intersection, light.Position))
-	rayStart := light.Position
 	rayLength := vectorDistance(intersection.Intersection, light.Position)
 
-	shortestIntersection = raycastSceneIntersect(scene, rayStart, rayDir)
+	shortestIntersection := raycastSceneIntersect(scene, light.Position, rayDir)
 	s := math.Abs(rayLength - shortestIntersection.Dist)
 
 	if (shortestIntersection.Triangle != nil && shortestIntersection.Triangle.id == intersection.Triangle.id) || s < DIFF {

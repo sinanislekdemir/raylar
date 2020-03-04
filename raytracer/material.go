@@ -84,16 +84,15 @@ func (s *Scene) parseMaterials() {
 	scenePath := filepath.Dir(s.InputFilename)
 	ImageMap = make(map[string]image.Image)
 	BumpMap = make(map[string]image.Image)
-	for k := range s.Objects {
-		for m := range s.Objects[k].Materials {
-			mat := s.Objects[k].Materials[m]
-			if _, ok := ImageMap[mat.Texture]; ok {
-				continue
-			}
-			if mat.Texture != "" {
-				loadImage(scenePath, mat.Texture)
-				loadBumpMap(scenePath, mat.Texture)
-			}
+	for m := range s.MasterObject.Materials {
+		mat := s.MasterObject.Materials[m]
+		if _, ok := ImageMap[mat.Texture]; ok {
+			continue
+		}
+		if mat.Texture != "" {
+			loadImage(scenePath, mat.Texture)
+			loadBumpMap(scenePath, mat.Texture)
 		}
 	}
+
 }

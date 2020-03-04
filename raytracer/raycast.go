@@ -183,40 +183,18 @@ func raycastObjectIntersect(object *Object, rayStart, rayDir *Vector) (intersect
 }
 
 func raycastSceneIntersect(scene *Scene, position, ray Vector) Intersection {
-	var bestHit Intersection
-	var bestDist float64
-
-	bestDist = -1
-
 	position = addVector(position, scaleVector(ray, GlobalConfig.RayCorrection))
-	intersectChannel := make(chan Intersection, len(scene.Objects))
-	for k := range scene.Objects {
-		go func(object *Object, name string, position, ray Vector, c chan Intersection) {
-			result := raycastObjectIntersect(object, &position, &ray)
-			result.ObjectName = name
-			c <- result
-		}(scene.Objects[k], k, position, ray, intersectChannel)
-	}
-	totalHits := 0
-	for i := 0; i < len(scene.Objects); i++ {
-		intersect := <-intersectChannel
-		if !intersect.Hit {
-			continue
-		}
+	intersect := raycastObjectIntersect(scene.MasterObject, &position, &ray)
 
-		if intersect.Dist < DIFF {
-			intersect.Hit = false
-			continue
-		}
-		totalHits += intersect.Hits
-		if (bestDist == -1) || (intersect.Dist < bestDist) {
-			bestHit = intersect
-			bestDist = intersect.Dist
-		}
+	if !intersect.Hit {
+		return intersect
 	}
-	bestHit.RayDir = ray
-	bestHit.Dist = bestDist
-	bestHit.Hits = totalHits
 
-	return bestHit
+	if intersect.Dist < DIFF {
+		intersect.Hit = false
+		return intersect
+	}
+	intersect.RayDir = ray
+
+	return intersect
 }

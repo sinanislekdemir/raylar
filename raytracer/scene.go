@@ -53,8 +53,9 @@ type PixelStorage struct {
 // Scene -
 type Scene struct {
 	Objects        map[string]*Object `json:"objects"`
-	Lights         []Light            `json:"lights"`
-	Observers      []Observer         `json:"observers"`
+	MasterObject   *Object
+	Lights         []Light    `json:"lights"`
+	Observers      []Observer `json:"observers"`
 	Pixels         [][]PixelStorage
 	Width          int
 	Height         int
@@ -64,7 +65,7 @@ type Scene struct {
 }
 
 // Init scene
-func (s *Scene) Init(sceneFile string, configFile string, mergeAll bool) error {
+func (s *Scene) Init(sceneFile string, configFile string) error {
 	log.Print("Initializing the scene")
 	if configFile == "" {
 		log.Print("No config set, setting defaults")
@@ -75,11 +76,10 @@ func (s *Scene) Init(sceneFile string, configFile string, mergeAll bool) error {
 			return err
 		}
 	}
-	GlobalConfig.MergeAll = mergeAll
-	return s.loadJSON(sceneFile, mergeAll)
+	return s.loadJSON(sceneFile)
 }
 
-func (s *Scene) loadJSON(jsonFile string, mergeAll bool) error {
+func (s *Scene) loadJSON(jsonFile string) error {
 	start := time.Now()
 	log.Printf("Loading file: %s\n", jsonFile)
 	file, err := ioutil.ReadFile(jsonFile)
@@ -117,12 +117,13 @@ func (s *Scene) mergeAll() {
 		}
 		gigaMesh.Triangles = append(gigaMesh.Triangles, s.Objects[obj].Triangles...)
 	}
-	gigaMesh.Root.getBoundingBox()
 	gigaMesh.calcRadius()
 	log.Printf("Build KDTree")
 	gigaMesh.KDTree()
+	gigaMesh.Root.getBoundingBox()
 	log.Printf("Built %d nodes with %d max depth, object ready", totalNodes, maxDepth)
-	s.Objects = map[string]*Object{"Scene": &gigaMesh}
+	s.Objects = nil
+	s.MasterObject = &gigaMesh
 }
 
 func (s *Scene) prepare(width, height int) {
@@ -132,9 +133,7 @@ func (s *Scene) prepare(width, height int) {
 	log.Printf("Init scene")
 	s.flatten()
 	s.processObjects()
-	if GlobalConfig.MergeAll {
-		s.mergeAll()
-	}
+	s.mergeAll()
 	s.parseMaterials()
 	s.fixLightPos()
 	s.ambientOcclusion()
@@ -193,23 +192,21 @@ func (s *Scene) buildPhotonMap() {
 }
 
 func (s *Scene) loadLights() {
-	for k := range s.Objects {
-		for i := range s.Objects[k].Triangles {
-			if !s.Objects[k].Triangles[i].Material.Light {
-				continue
+	for i := range s.MasterObject.Triangles {
+		if !s.MasterObject.Triangles[i].Material.Light {
+			continue
+		}
+		mat := s.MasterObject.Triangles[i].Material
+		lights := sampleTriangle(s.MasterObject.Triangles[i], GlobalConfig.LightSampleCount)
+		strength := s.MasterObject.Triangles[i].Material.LightStrength
+		for li := range lights {
+			light := Light{
+				Position:      lights[li],
+				Color:         mat.Color,
+				Active:        true,
+				LightStrength: strength,
 			}
-			mat := s.Objects[k].Triangles[i].Material
-			lights := sampleTriangle(s.Objects[k].Triangles[i], GlobalConfig.LightSampleCount)
-			strength := s.Objects[k].Triangles[i].Material.LightStrength
-			for li := range lights {
-				light := Light{
-					Position:      lights[li],
-					Color:         mat.Color,
-					Active:        true,
-					LightStrength: strength,
-				}
-				s.Lights = append(s.Lights, light)
-			}
+			s.Lights = append(s.Lights, light)
 		}
 	}
 }
@@ -217,10 +214,7 @@ func (s *Scene) loadLights() {
 func (s *Scene) ambientOcclusion() {
 	log.Printf("Calculating ambient parameters")
 	bb := BoundingBox{}
-	for k := range s.Objects {
-		obj := s.Objects[k]
-		bb.extend(obj.Root.getBoundingBox())
-	}
+	bb.extend(s.MasterObject.Root.getBoundingBox())
 	dia := bb.MaxExtend[0] - bb.MinExtend[0]
 	if bb.MaxExtend[1]-bb.MinExtend[1] < dia {
 		dia = bb.MaxExtend[1] - bb.MinExtend[1]
@@ -276,11 +270,6 @@ func (s *Scene) processObjects() {
 		}
 		log.Printf("Unify triangles")
 		obj.UnifyTriangles()
-		if !GlobalConfig.MergeAll {
-			log.Printf("Build KDTree")
-			obj.KDTree()
-			log.Printf("Built %d nodes with %d max depth, object ready", totalNodes, maxDepth)
-		}
 		totalNodes = 0
 		maxDepth = 0
 		s.Objects[k] = obj

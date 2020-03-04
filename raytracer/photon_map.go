@@ -10,14 +10,14 @@ import (
 func buildPhotonMap(scene *Scene) {
 	log.Printf("Analysing scene for caustic surfaces")
 	causticSampleLocations := make([]Vector, 0)
-	for k := range scene.Objects {
-		for tri := range scene.Objects[k].Triangles {
-			if scene.Objects[k].Triangles[tri].Material.Glossiness > 0 || scene.Objects[k].Triangles[tri].Material.Transmission > 0 {
-				locations := sampleTriangle(scene.Objects[k].Triangles[tri], GlobalConfig.CausticsSamplerLimit)
-				causticSampleLocations = append(causticSampleLocations, locations...)
-			}
+
+	for tri := range scene.MasterObject.Triangles {
+		if scene.MasterObject.Triangles[tri].Material.Glossiness > 0 || scene.MasterObject.Triangles[tri].Material.Transmission > 0 {
+			locations := sampleTriangle(scene.MasterObject.Triangles[tri], GlobalConfig.CausticsSamplerLimit)
+			causticSampleLocations = append(causticSampleLocations, locations...)
 		}
 	}
+
 	log.Printf("Found %d sample photons", len(causticSampleLocations))
 	for i := range scene.Lights {
 		var wg sync.WaitGroup

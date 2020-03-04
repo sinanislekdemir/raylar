@@ -146,10 +146,16 @@ func generateNode(tris *[]Triangle, depth int) (result Node) {
 			for j := range rightTris {
 				if leftTris[i].equals(rightTris[j]) {
 					matches++
+					ratio = (float64(matches)/float64(len(leftTris)) < 0.5 && float64(matches)/float64(len(rightTris)) < 0.5)
+					if !ratio {
+						break
+					}
 				}
 			}
+			if !ratio {
+				break
+			}
 		}
-		ratio = (float64(matches)/float64(len(leftTris)) < 0.5 && float64(matches)/float64(len(rightTris)) < 0.5)
 	}
 
 	if ratio && depth < 50 {
