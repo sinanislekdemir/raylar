@@ -30,6 +30,7 @@ func (o *Object) UnifyTriangles() {
 			triangle.P1 = o.Vertices[face[0]]
 			triangle.P2 = o.Vertices[face[1]]
 			triangle.P3 = o.Vertices[face[2]]
+
 			if len(o.TexCoords) > 0 {
 				triangle.T1 = o.TexCoords[face[0]]
 				triangle.T2 = o.TexCoords[face[1]]

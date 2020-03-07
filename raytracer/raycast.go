@@ -61,87 +61,106 @@ func raycastTriangleIntersect(start, vector, p1, p2, p3 *Vector) (intersection, 
 	return
 }
 
-// This is the branchless check but it doesn't help much with the performance.
-// func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) bool {
-// 	inv := Vector{
-// 		1.0 / rayVector[0],
-// 		1.0 / rayVector[1],
-// 		1.0 / rayVector[2],
-// 	}
-// 	t1 := (boundingBox.MinExtend[0] - rayStart[0]) * inv[0]
-// 	t2 := (boundingBox.MaxExtend[0] - rayStart[0]) * inv[0]
-
-// 	tmin := math.Min(t1, t2)
-// 	tmax := math.Max(t1, t2)
-// 	for i := 1; i < 3; i++ {
-// 		t1 = (boundingBox.MinExtend[i] - rayStart[i]) * inv[i]
-// 		t2 = (boundingBox.MaxExtend[i] - rayStart[i]) * inv[i]
-
-// 		tmin = math.Max(tmin, math.Min(t1, t2))
-// 		tmax = math.Min(tmax, math.Max(t1, t2))
-// 	}
-// 	return tmax > math.Max(tmin, 0)
-// }
-
 func raycastBoxIntersect(rayStart, rayVector *Vector, boundingBox *BoundingBox) bool {
+	// IMPORTANT NOTE!
+	// DO NOT FOR-LOOP HERE!!! It looks like a easy and simple idea to loop from 0 to 3 here but
+	// believe me, when it does 1 million checks, it really matters!!!!!!
+	// reduce the branches as much as we can!
 	right := 0.0
 	left := 1.0
 	middle := 2.0
 	inside := true
-	quadrant := Vector{}
+	quadrant := Vector{middle, middle, middle}
 	whichPlane := 0
-	maxT := Vector{}
 	candidatePlane := Vector{}
 
-	for i := 0; i < 3; i++ {
-		if rayStart[i] < boundingBox.MinExtend[i] {
-			quadrant[i] = left
-			candidatePlane[i] = boundingBox.MinExtend[i]
-			inside = false
-		} else if rayStart[i] > boundingBox.MaxExtend[i] {
-			quadrant[i] = right
-			candidatePlane[i] = boundingBox.MaxExtend[i]
-			inside = false
-		} else {
-			quadrant[i] = middle
-		}
+	if rayStart[0] < boundingBox[0][0] {
+		quadrant[0] = left
+		candidatePlane[0] = boundingBox[0][0]
+		inside = false
+	} else if rayStart[0] > boundingBox[1][0] {
+		quadrant[0] = right
+		candidatePlane[0] = boundingBox[1][0]
+		inside = false
+	}
+
+	if rayStart[1] < boundingBox[0][1] {
+		quadrant[1] = left
+		candidatePlane[1] = boundingBox[0][1]
+		inside = false
+	} else if rayStart[1] > boundingBox[1][1] {
+		quadrant[1] = right
+		candidatePlane[1] = boundingBox[1][1]
+		inside = false
+	}
+
+	if rayStart[2] < boundingBox[0][2] {
+		quadrant[2] = left
+		candidatePlane[2] = boundingBox[0][2]
+		inside = false
+	} else if rayStart[2] > boundingBox[1][2] {
+		quadrant[2] = right
+		candidatePlane[2] = boundingBox[1][2]
+		inside = false
 	}
 
 	if inside {
 		return true
 	}
+	maxT := Vector{-1, -1, -1}
 
-	for i := 0; i < 3; i++ {
-		if quadrant[i] != middle && rayVector[i] != 0 {
-			maxT[i] = (candidatePlane[i] - rayStart[i]) / rayVector[i]
-		} else {
-			maxT[i] = -1
-		}
+	if quadrant[0] != middle && rayVector[0] != 0 {
+		maxT[0] = (candidatePlane[0] - rayStart[0]) / rayVector[0]
 	}
-	whichPlane = 0
-	for i := 1; i < 3; i++ {
-		if maxT[whichPlane] < maxT[i] {
-			whichPlane = i
-		}
+
+	if quadrant[1] != middle && rayVector[1] != 0 {
+		maxT[1] = (candidatePlane[1] - rayStart[1]) / rayVector[1]
 	}
+
+	if quadrant[2] != middle && rayVector[2] != 0 {
+		maxT[2] = (candidatePlane[2] - rayStart[2]) / rayVector[2]
+	}
+
+	if maxT[whichPlane] < maxT[1] {
+		whichPlane = 1
+	}
+
+	if maxT[whichPlane] < maxT[2] {
+		whichPlane = 2
+	}
+
 	if maxT[whichPlane] < 0 {
 		return false
 	}
-	coord := Vector{}
-	for i := 0; i < 3; i++ {
-		if whichPlane != i {
-			coord[i] = rayStart[i] + maxT[whichPlane]*rayVector[i]
-			if coord[i] < boundingBox.MinExtend[i] || coord[i] > boundingBox.MaxExtend[i] {
-				return false
-			}
-			coord[i] = candidatePlane[i]
+
+	a := 0.0
+
+	if whichPlane != 0 {
+		a = rayStart[0] + maxT[whichPlane]*rayVector[0]
+		if a < boundingBox[0][0] || a > boundingBox[1][0] {
+			return false
 		}
 	}
+
+	if whichPlane != 1 {
+		a = rayStart[1] + maxT[whichPlane]*rayVector[1]
+		if a < boundingBox[0][1] || a > boundingBox[1][1] {
+			return false
+		}
+	}
+
+	if whichPlane != 2 {
+		a = rayStart[2] + maxT[whichPlane]*rayVector[2]
+		if a < boundingBox[0][2] || a > boundingBox[1][2] {
+			return false
+		}
+	}
+
 	return true
 }
 
 func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *Intersection) {
-	if !raycastBoxIntersect(rayStart, rayDir, node.getBoundingBox()) {
+	if !raycastBoxIntersect(rayStart, rayDir, node.BoundingBox) {
 		return
 	}
 

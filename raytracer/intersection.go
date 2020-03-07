@@ -48,25 +48,13 @@ func (t *Triangle) midPoint() Vector {
 	return mid
 }
 
-func (t *Triangle) getBoundingBox() *BoundingBox {
+func (t *Triangle) getBoundingBox() BoundingBox {
 	result := BoundingBox{}
-	result.MinExtend = t.P1
-	result.MaxExtend = t.P1
-	for i := 0; i < 3; i++ {
-		if t.P2[i] < result.MinExtend[i] {
-			result.MinExtend[i] = t.P2[i]
-		}
-		if t.P2[i] > result.MaxExtend[i] {
-			result.MaxExtend[i] = t.P2[i]
-		}
-		if t.P3[i] < result.MinExtend[i] {
-			result.MinExtend[i] = t.P3[i]
-		}
-		if t.P3[i] > result.MaxExtend[i] {
-			result.MaxExtend[i] = t.P3[i]
-		}
-	}
-	return &result
+	result[0] = t.P1
+	result[1] = t.P1
+	result.extendVector(t.P2)
+	result.extendVector(t.P3)
+	return result
 }
 
 func (i *Intersection) getTexCoords() Vector {
@@ -81,7 +69,7 @@ func (i *Intersection) getTexCoords() Vector {
 func (i *Intersection) hasBumpMap() bool {
 	material := i.Triangle.Material
 	if material.Texture != "" {
-		if _, ok := BumpMap[material.Texture]; ok {
+		if _, ok := BumpMapNormals[material.Texture]; ok {
 			return true
 		}
 	}
@@ -91,57 +79,44 @@ func (i *Intersection) hasBumpMap() bool {
 func (i *Intersection) getBumpNormal() Vector {
 	material := i.Triangle.Material
 	if material.Texture != "" {
-		if img, ok := BumpMap[material.Texture]; ok {
-			// ok, we have the image. Let's calculate the pixel color;
-			s := i.getTexCoords()
-			// get image size
-			imgBounds := img.Bounds().Max
-
-			if s[0] > 1 {
-				s[0] -= math.Floor(s[0])
-			}
-			if s[0] < 0 {
-				s[0] = math.Abs(s[0])
-				s[0] = 1 - (s[0] - math.Floor(s[0]))
-			}
-
-			if s[1] > 1 {
-				s[1] -= math.Floor(s[1])
-			}
-
-			if s[1] < 0 {
-				s[1] = math.Abs(s[1])
-				s[1] = 1 - (s[1] - math.Floor(s[1]))
-			}
-			s[1] = 1 - s[1]
-
-			s[0] -= float64(int64(s[0]))
-			s[1] -= float64(int64(s[1]))
-
-			pixelX := int(float64(imgBounds.X) * s[0])
-			pixelY := int(float64(imgBounds.Y) * s[1])
-			r, g, b, _ := img.At(pixelX, pixelY).RGBA()
-			r, g, b = r>>8, g>>8, b>>8
-
-			bump := normalizeVector(Vector{
-				(float64(r) / 255),
-				(float64(g) / 255),
-				(float64(b) / 255),
-				1,
-			})
-
-			bump = normalizeVector(subVector(scaleVector(bump, 2), Vector{1, 1, 1, 0}))
-			t := crossProduct(i.IntersectionNormal, Vector{0, -1, 0, 0})
-			if vectorLength(t) < DIFF {
-				t = crossProduct(i.IntersectionNormal, Vector{0, 0, 1, 0})
-			}
-			t = normalizeVector(t)
-			bV := normalizeVector(crossProduct(i.IntersectionNormal, t))
-			tbnMatrix := Matrix{t, bV, i.IntersectionNormal, Vector{0, 0, 0, 1}}
-			wNormal := normalizeVector(vectorTransform(bump, tbnMatrix))
-			wNormal[3] = 0
-			return wNormal
+		// ok, we have the image. Let's calculate the pixel color;
+		s := i.getTexCoords()
+		// get image size
+		if s[0] > 1 {
+			s[0] -= math.Floor(s[0])
 		}
+		if s[0] < 0 {
+			s[0] = math.Abs(s[0])
+			s[0] = 1 - (s[0] - math.Floor(s[0]))
+		}
+
+		if s[1] > 1 {
+			s[1] -= math.Floor(s[1])
+		}
+
+		if s[1] < 0 {
+			s[1] = math.Abs(s[1])
+			s[1] = 1 - (s[1] - math.Floor(s[1]))
+		}
+		s[1] = 1 - s[1]
+
+		s[0] -= float64(int64(s[0]))
+		s[1] -= float64(int64(s[1]))
+
+		pixelX := int(float64(len(BumpMapNormals[material.Texture])) * s[0])
+		pixelY := int(float64(len(BumpMapNormals[material.Texture][0])) * s[1])
+
+		bump := BumpMapNormals[material.Texture][pixelX][pixelY]
+		t := crossProduct(i.IntersectionNormal, Vector{0, -1, 0, 0})
+		if vectorLength(t) < DIFF {
+			t = crossProduct(i.IntersectionNormal, Vector{0, 0, 1, 0})
+		}
+		t = normalizeVector(t)
+		bV := normalizeVector(crossProduct(i.IntersectionNormal, t))
+		tbnMatrix := Matrix{t, bV, i.IntersectionNormal, Vector{0, 0, 0, 1}}
+		wNormal := normalizeVector(vectorTransform(bump, tbnMatrix))
+		wNormal[3] = 0
+		return wNormal
 	}
 	return i.IntersectionNormal
 }
@@ -180,7 +155,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 		return GlobalConfig.TransparentColor
 	}
 	if depth >= GlobalConfig.MaxReflectionDepth {
-		return GlobalConfig.TransparentColor
+		return i.getColor(scene)
 	}
 
 	// We use same samples for both color sampling as well as
@@ -215,7 +190,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 	}
 
 	// Get color
-	color := i.getColor(scene, depth)
+	color := i.getColor(scene)
 
 	if GlobalConfig.RenderAmbientColors {
 		// Get ambient colors and apply to existing color
@@ -241,7 +216,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 		color[2] * light[2],
 		pAlpha,
 	}
-	dirs := make([]Vector, 0)
+	dirs := make([]Vector, 0, int(math.Floor(i.Triangle.Material.Roughness*10)))
 
 	// When light is too shiny, we have to limit color to white as it can't exceed white.
 	color = limitVector(color, 1)
@@ -322,7 +297,7 @@ func (i *Intersection) getDirectLight(scene *Scene, depth int) Vector {
 	return calculateTotalLight(scene, i, 0)
 }
 
-func (i *Intersection) getColor(scene *Scene, depth int) Vector {
+func (i *Intersection) getColor(scene *Scene) Vector {
 	if !i.Hit {
 		return Vector{
 			0, 0, 0, 1,

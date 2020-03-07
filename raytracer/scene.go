@@ -19,6 +19,7 @@ type Light struct {
 	LightStrength float64 `json:"light_strength"`
 	Directional   bool    `json:"directional_light"`
 	Direction     Vector  `json:"direction"`
+	Samples       []Vector
 }
 
 // Observer -
@@ -120,7 +121,6 @@ func (s *Scene) mergeAll() {
 	gigaMesh.calcRadius()
 	log.Printf("Build KDTree")
 	gigaMesh.KDTree()
-	gigaMesh.Root.getBoundingBox()
 	log.Printf("Built %d nodes with %d max depth, object ready", totalNodes, maxDepth)
 	s.Objects = nil
 	s.MasterObject = &gigaMesh
@@ -136,7 +136,6 @@ func (s *Scene) prepare(width, height int) {
 	s.mergeAll()
 	s.parseMaterials()
 	s.fixLightPos()
-	s.ambientOcclusion()
 	s.loadLights()
 	s.prepareMatrices()
 	s.scanPixels()
@@ -192,6 +191,9 @@ func (s *Scene) buildPhotonMap() {
 }
 
 func (s *Scene) loadLights() {
+	// for i := range s.Lights {
+	// 	s.Lights[i].HitExceptions =
+	// }
 	for i := range s.MasterObject.Triangles {
 		if !s.MasterObject.Triangles[i].Material.Light {
 			continue
@@ -205,24 +207,11 @@ func (s *Scene) loadLights() {
 				Color:         mat.Color,
 				Active:        true,
 				LightStrength: strength,
+				// HitExceptions: make(map[int64]bool),
 			}
 			s.Lights = append(s.Lights, light)
 		}
 	}
-}
-
-func (s *Scene) ambientOcclusion() {
-	log.Printf("Calculating ambient parameters")
-	bb := BoundingBox{}
-	bb.extend(s.MasterObject.Root.getBoundingBox())
-	dia := bb.MaxExtend[0] - bb.MinExtend[0]
-	if bb.MaxExtend[1]-bb.MinExtend[1] < dia {
-		dia = bb.MaxExtend[1] - bb.MinExtend[1]
-	}
-	if bb.MaxExtend[2]-bb.MinExtend[2] < dia {
-		dia = bb.MaxExtend[2] - bb.MinExtend[2]
-	}
-	s.ShortRadius = dia / 2.0
 }
 
 // Lights have 0 as w but they are not vectors, they are positions;

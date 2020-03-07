@@ -1,10 +1,9 @@
 package raytracer
 
+import "math"
+
 // BoundingBox -
-type BoundingBox struct {
-	MinExtend Vector
-	MaxExtend Vector
-}
+type BoundingBox [2]Vector
 
 // Node for KDTree
 type Node struct {
@@ -16,34 +15,32 @@ type Node struct {
 	depth         int
 }
 
-func (b *BoundingBox) extend(o *BoundingBox) {
-	for i := 0; i < 3; i++ {
-		if o.MinExtend[i] < b.MinExtend[i] {
-			b.MinExtend[i] = o.MinExtend[i]
-		}
-		if o.MaxExtend[i] > b.MaxExtend[i] {
-			b.MaxExtend[i] = o.MaxExtend[i]
-		}
-	}
+func (b *BoundingBox) extend(o BoundingBox) {
+	b[0][0] = math.Min(b[0][0], o[0][0])
+	b[0][1] = math.Min(b[0][1], o[0][1])
+	b[0][2] = math.Min(b[0][2], o[0][2])
+
+	b[1][0] = math.Max(b[1][0], o[1][0])
+	b[1][1] = math.Max(b[1][1], o[1][1])
+	b[1][2] = math.Max(b[1][2], o[1][2])
 }
 
 func (b *BoundingBox) extendVector(v Vector) {
-	for i := 0; i < 3; i++ {
-		if v[i] < b.MinExtend[i] {
-			b.MinExtend[i] = v[i]
-		}
-		if v[i] > b.MaxExtend[i] {
-			b.MaxExtend[i] = v[i]
-		}
-	}
+	b[0][0] = math.Min(b[0][0], v[0])
+	b[0][1] = math.Min(b[0][1], v[1])
+	b[0][2] = math.Min(b[0][2], v[2])
+
+	b[1][0] = math.Max(b[1][0], v[0])
+	b[1][1] = math.Max(b[1][1], v[1])
+	b[1][2] = math.Max(b[1][2], v[2])
 }
 
 func (b *BoundingBox) longestAxis() int {
 	result := 0
 	fdiff := 0.0
-	dist := b.MaxExtend[0] - b.MinExtend[0]
+	dist := b[1][0] - b[0][0]
 	for i := 1; i < 3; i++ {
-		fdiff = b.MaxExtend[i] - b.MinExtend[i]
+		fdiff = b[1][i] - b[0][i]
 		if fdiff > dist {
 			result = i
 		}
@@ -53,35 +50,33 @@ func (b *BoundingBox) longestAxis() int {
 
 func (b *BoundingBox) center() Vector {
 	return Vector{
-		(b.MaxExtend[0] - b.MinExtend[0]) / 2.0,
-		(b.MaxExtend[1] - b.MinExtend[1]) / 2.0,
-		(b.MaxExtend[2] - b.MinExtend[2]) / 2.0,
+		(b[1][0] - b[0][0]) / 2.0,
+		(b[1][1] - b[0][1]) / 2.0,
+		(b[1][2] - b[0][2]) / 2.0,
 		1,
 	}
 }
 
 func (b *BoundingBox) inside(v Vector) bool {
-	return (v[0]+DIFF >= b.MinExtend[0] && v[0]-DIFF <= b.MaxExtend[0] &&
-		v[1]+DIFF >= b.MinExtend[1] && v[1]-DIFF <= b.MaxExtend[1] &&
-		v[2]+DIFF >= b.MinExtend[2] && v[2]-DIFF <= b.MaxExtend[2])
+	return (v[0]+DIFF >= b[0][0] && v[0]-DIFF <= b[1][0] &&
+		v[1]+DIFF >= b[0][1] && v[1]-DIFF <= b[1][1] &&
+		v[2]+DIFF >= b[0][2] && v[2]-DIFF <= b[1][2])
 }
 
 func (n *Node) getBoundingBox() *BoundingBox {
-	if n.BoundingBox != nil {
+	if n.Triangles == nil || len(n.Triangles) == 0 {
+		n.BoundingBox = &BoundingBox{}
 		return n.BoundingBox
 	}
-	if n.Triangles == nil || len(n.Triangles) == 0 {
-		return &BoundingBox{}
-	}
 	bb := n.Triangles[0].getBoundingBox()
-	n.BoundingBox = bb
+	n.BoundingBox = &bb
 	if len(n.Triangles) == 1 {
 		return n.BoundingBox
 	}
 	for i := 1; i < len(n.Triangles); i++ {
 		bb.extend(n.Triangles[i].getBoundingBox())
 	}
-	n.BoundingBox = bb
+	n.BoundingBox = &bb
 	return n.BoundingBox
 }
 

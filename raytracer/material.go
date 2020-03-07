@@ -9,7 +9,7 @@ import (
 )
 
 var ImageMap map[string]image.Image
-var BumpMap map[string]image.Image
+var BumpMapNormals map[string][][]Vector
 
 type indice [4]int64
 
@@ -70,7 +70,24 @@ func loadBumpMap(scenePath, texture string) {
 		return
 	}
 	log.Printf("Image Bump Map %s loaded", bumpTexture)
-	BumpMap[texture] = src
+	imgBounds := src.Bounds().Max
+	BumpMapNormals[texture] = make([][]Vector, imgBounds.X)
+	for i := 0; i < imgBounds.X; i++ {
+		BumpMapNormals[texture][i] = make([]Vector, imgBounds.Y)
+		for j := 0; j < imgBounds.Y; j++ {
+			r, g, b, _ := src.At(i, j).RGBA()
+			r, g, b = r>>8, g>>8, b>>8
+
+			bump := normalizeVector(Vector{
+				(float64(r) / 255),
+				(float64(g) / 255),
+				(float64(b) / 255),
+				1,
+			})
+
+			BumpMapNormals[texture][i][j] = normalizeVector(subVector(scaleVector(bump, 2), Vector{1, 1, 1, 0}))
+		}
+	}
 	imageFile.Close()
 }
 
@@ -83,7 +100,7 @@ func (s *Scene) parseMaterials() {
 	log.Printf("Parse material textures\n")
 	scenePath := filepath.Dir(s.InputFilename)
 	ImageMap = make(map[string]image.Image)
-	BumpMap = make(map[string]image.Image)
+	BumpMapNormals = make(map[string][][]Vector)
 	for m := range s.MasterObject.Materials {
 		mat := s.MasterObject.Materials[m]
 		if _, ok := ImageMap[mat.Texture]; ok {

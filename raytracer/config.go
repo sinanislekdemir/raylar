@@ -56,7 +56,7 @@ var DEFAULT = Config{
 	RenderRefractions:        true,
 	Width:                    1600,
 	Height:                   900,
-	EdgeDetechThreshold:      0.2,
+	EdgeDetechThreshold:      0.7,
 	AntialiasSamples:         8,
 	TransparentColor:         Vector{0, 0, 0, 0},
 	Percentage:               100,

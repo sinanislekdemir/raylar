@@ -25,7 +25,7 @@ func ambientColor(scene *Scene, intersection *Intersection, samples []Intersecti
 	totalHits := 0.0
 	totalColor := Vector{}
 	for i := 0; i < len(samples); i++ {
-		color := samples[i].getColor(scene, 0)
+		color := samples[i].getColor(scene)
 		if vectorLength(color) < DIFF {
 			continue
 		}

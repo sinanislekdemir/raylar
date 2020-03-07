@@ -47028,6 +47028,7 @@
     1.0,
     1.0
    ],
+   "light_strength": 1000,
    "active": true
   }
  ],
