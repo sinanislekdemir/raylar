@@ -17,6 +17,7 @@ install: _you need golang to install_
 - [x] Light Objects (and area light)
 - [x] Basic Reflections
 - [x] Bump Mapping
+- [x] Alpha Channel
 
 ## Stages of rendering (without Caustics)
 
