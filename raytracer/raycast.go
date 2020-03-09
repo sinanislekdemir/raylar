@@ -181,6 +181,20 @@ func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *In
 		if hit {
 			intersection.Hits++
 			dist := pvectorDistance(intersectionPoint, rayStart)
+			if node.Triangles[i].Material.Texture != "" {
+				temp := Intersection{
+					Hit:                true,
+					IntersectionNormal: *normal,
+					Intersection:       *intersectionPoint,
+					Triangle:           &node.Triangles[i],
+					RayDir:             *rayDir,
+					RayStart:           *rayStart,
+					Dist:               dist,
+				}
+				if temp.getColor()[3] < 1 {
+					continue
+				}
+			}
 			if dist > 0 && (intersection.Dist == -1 || dist < intersection.Dist) {
 				intersection.Hit = true
 				intersection.IntersectionNormal = *normal

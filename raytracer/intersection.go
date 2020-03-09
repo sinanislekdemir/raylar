@@ -155,7 +155,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 		return GlobalConfig.TransparentColor
 	}
 	if depth >= GlobalConfig.MaxReflectionDepth {
-		return i.getColor(scene)
+		return i.getColor()
 	}
 
 	// We use same samples for both color sampling as well as
@@ -190,7 +190,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 	}
 
 	// Get color
-	color := i.getColor(scene)
+	color := i.getColor()
 
 	if GlobalConfig.RenderAmbientColors {
 		// Get ambient colors and apply to existing color
@@ -297,7 +297,7 @@ func (i *Intersection) getDirectLight(scene *Scene, depth int) Vector {
 	return calculateTotalLight(scene, i, 0)
 }
 
-func (i *Intersection) getColor(scene *Scene) Vector {
+func (i *Intersection) getColor() Vector {
 	if !i.Hit {
 		return Vector{
 			0, 0, 0, 1,

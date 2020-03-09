@@ -26,7 +26,7 @@ type Material struct {
 	LightStrength     float64  `json:"light_strength"`
 }
 
-func loadImage(scenePath, texture string) {
+func loadImage(scenePath, texture string) (imageHasAlpha bool) {
 	textureName := texture
 	_, err := os.Stat(texture)
 	if os.IsNotExist(err) {
@@ -59,13 +59,17 @@ func loadImage(scenePath, texture string) {
 				float64(b) / 255,
 				float64(a) / 255,
 			}
+			if result[3] < 1 {
+				imageHasAlpha = true
+			}
 
 			Images[textureName][i][j] = result
 		}
 	}
 	imageFile.Close()
 
-	log.Printf("Image %s loaded", texture)
+	log.Printf("Image %s loaded: Alpha %t", texture, imageHasAlpha)
+	return imageHasAlpha
 }
 
 func loadBumpMap(scenePath, texture string) {
@@ -130,5 +134,4 @@ func (s *Scene) parseMaterials() {
 			loadBumpMap(scenePath, mat.Texture)
 		}
 	}
-
 }

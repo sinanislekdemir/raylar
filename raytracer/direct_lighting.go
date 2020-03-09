@@ -54,7 +54,7 @@ func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *
 
 		// Let things pass if this is a regular glass
 		if (shortestIntersection.Hit && shortestIntersection.Triangle != nil) && (shortestIntersection.Triangle.id != intersection.Triangle.id) && (shortestIntersection.Triangle.Material.Transmission > 0) && (!shortestIntersection.Triangle.Smooth) {
-			col := shortestIntersection.getColor(scene)
+			col := shortestIntersection.getColor()
 			lColor := Vector{
 				light.Color[0] * col[0],
 				light.Color[1] * col[1],
@@ -137,7 +137,7 @@ func calculateLight(scene *Scene, intersection *Intersection, light *Light, dept
 
 	// Let things pass if this is a regular glass
 	if (shortestIntersection.Hit && shortestIntersection.Triangle != nil) && (shortestIntersection.Triangle.id != intersection.Triangle.id) && (shortestIntersection.Triangle.Material.Transmission > 0) && (!shortestIntersection.Triangle.Smooth) {
-		col := shortestIntersection.getColor(scene)
+		col := shortestIntersection.getColor()
 		lColor := Vector{
 			light.Color[0] * col[0],
 			light.Color[1] * col[1],
