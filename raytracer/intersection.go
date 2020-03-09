@@ -312,11 +312,10 @@ func (i *Intersection) getColor(scene *Scene) Vector {
 	material := i.Triangle.Material
 	result := material.Color
 	if material.Texture != "" {
-		if img, ok := ImageMap[material.Texture]; ok {
+		if _, ok := Images[material.Texture]; ok {
 			// ok, we have the image. Let's calculate the pixel color;
 			s := i.getTexCoords()
 			// get image size
-			imgBounds := img.Bounds().Max
 
 			if s[0] > 1 {
 				s[0] -= math.Floor(s[0])
@@ -339,17 +338,9 @@ func (i *Intersection) getColor(scene *Scene) Vector {
 			s[0] -= float64(int64(s[0]))
 			s[1] -= float64(int64(s[1]))
 
-			pixelX := int(float64(imgBounds.X) * s[0])
-			pixelY := int(float64(imgBounds.Y) * s[1])
-			r, g, b, a := img.At(pixelX, pixelY).RGBA()
-			r, g, b, a = r>>8, g>>8, b>>8, a>>8
-
-			result = Vector{
-				float64(r) / 255,
-				float64(g) / 255,
-				float64(b) / 255,
-				float64(a) / 255,
-			}
+			pixelX := int(float64(len(Images[material.Texture])) * s[0])
+			pixelY := int(float64(len(Images[material.Texture][0])) * s[1])
+			result = Images[material.Texture][pixelX][pixelY]
 		}
 	}
 	return result

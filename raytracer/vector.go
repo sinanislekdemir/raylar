@@ -41,11 +41,19 @@ func addVector(v1, v2 Vector) Vector {
 }
 
 func limitVector(v Vector, factor float64) Vector {
+	// I know how to loop from 0 to 2, but for-loop
+	// introduces an additional jump instruction and extra
+	// condition check. which increases cpu-cycles.
+	// and I avoid that here.
 	result := Vector{v[0], v[1], v[2], v[3]}
-	for i := 0; i < 3; i++ {
-		if result[i] > factor {
-			result[i] = factor
-		}
+	if result[0] > factor {
+		result[0] = factor
+	}
+	if result[1] > factor {
+		result[1] = factor
+	}
+	if result[2] > factor {
+		result[2] = factor
 	}
 	return result
 }
