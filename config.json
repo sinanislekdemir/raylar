@@ -19,7 +19,7 @@
  "photon_spacing": 0.005,
  "width": 1600,
  "height": 900,
- "edge_detect_threshold": 0.7,
+ "edge_detect_threshold": 0.4,
  "merge_all": false,
  "antialias_samples": 8,
  "transparent_color": [0, 0, 0, 0]

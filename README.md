@@ -41,7 +41,7 @@ install: _you need golang to install_
 
 ### Environment Map
 
-![kitchen_full](https://www.islekdemir.com/environment_map.png)
+![kitchen_full](https://www.islekdemir.com/env_map.png)
 
 
 ![residential](https://www.islekdemir.com/residental.png)
