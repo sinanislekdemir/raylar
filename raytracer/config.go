@@ -8,58 +8,59 @@ import (
 
 // Config keeps Raytracer Configuration
 type Config struct {
-	SamplerLimit             int     `json:"sampler_limit"`
-	LightSampleCount         int     `json:"light_sample_count"`
-	CausticsSamplerLimit     int     `json:"caustics_samples"`
-	Exposure                 float64 `json:"exposure"`
-	MaxReflectionDepth       int     `json:"max_reflection_depth"`
-	RayCorrection            float64 `json:"ray_correction"`
-	OcclusionRate            float64 `json:"occlusion_rate"`
-	AmbientRadius            float64 `json:"ambient_occlusion_radius"`
-	RenderOcclusion          bool    `json:"render_occlusion"`
-	RenderLights             bool    `json:"render_lights"`
-	RenderColors             bool    `json:"render_colors"`
-	RenderAmbientColors      bool    `json:"render_ambient_color"`
-	RenderCaustics           bool    `json:"render_caustics"`
-	RenderBumpMap            bool    `json:"render_bump_map"`
 	AmbientColorSharingRatio float64 `json:"ambient_color_ratio"`
+	AmbientRadius            float64 `json:"ambient_occlusion_radius"`
+	AntialiasSamples         int     `json:"antialias_samples"`
+	CausticsSamplerLimit     int     `json:"caustics_samples"`
+	EdgeDetechThreshold      float64 `json:"edge_detect_threshold"`
+	EnvironmentMap           string  `json:"environment_map"`
+	Exposure                 float64 `json:"exposure"`
+	Height                   int     `json:"height"`
+	LightSampleCount         int     `json:"light_sample_count"`
+	MaxReflectionDepth       int     `json:"max_reflection_depth"`
+	OcclusionRate            float64 `json:"occlusion_rate"`
+	PhotonSpacing            float64 `json:"photon_spacing"`
+	RayCorrection            float64 `json:"ray_correction"`
+	RenderAmbientColors      bool    `json:"render_ambient_color"`
+	RenderBumpMap            bool    `json:"render_bump_map"`
+	RenderCaustics           bool    `json:"render_caustics"`
+	RenderColors             bool    `json:"render_colors"`
+	RenderLights             bool    `json:"render_lights"`
+	RenderOcclusion          bool    `json:"render_occlusion"`
 	RenderReflections        bool    `json:"render_reflections"`
 	RenderRefractions        bool    `json:"render_refractions"`
-	PhotonSpacing            float64 `json:"photon_spacing"`
-	Width                    int     `json:"width"`
-	Height                   int     `json:"height"`
-	EdgeDetechThreshold      float64 `json:"edge_detect_threshold"`
-	AntialiasSamples         int     `json:"antialias_samples"`
+	SamplerLimit             int     `json:"sampler_limit"`
 	TransparentColor         Vector  `json:"transparent_color"`
+	Width                    int     `json:"width"`
 	Percentage               int
 }
 
 var DEFAULT = Config{
 	// Default Config Settings
-	SamplerLimit:             16,
-	LightSampleCount:         16,
-	CausticsSamplerLimit:     10000,
-	PhotonSpacing:            0.005,
-	Exposure:                 0.2,
-	MaxReflectionDepth:       3,
-	RayCorrection:            0.002,
-	OcclusionRate:            0.2,
-	AmbientRadius:            2.1,
-	RenderOcclusion:          true,
-	RenderLights:             true,
-	RenderColors:             true,
-	RenderAmbientColors:      true,
-	RenderCaustics:           false,
-	RenderBumpMap:            true,
 	AmbientColorSharingRatio: 0.5,
+	AmbientRadius:            2.1,
+	AntialiasSamples:         8,
+	CausticsSamplerLimit:     10000,
+	EdgeDetechThreshold:      0.7,
+	Exposure:                 0.2,
+	Height:                   900,
+	LightSampleCount:         16,
+	MaxReflectionDepth:       3,
+	OcclusionRate:            0.2,
+	Percentage:               100,
+	PhotonSpacing:            0.005,
+	RayCorrection:            0.002,
+	RenderAmbientColors:      true,
+	RenderBumpMap:            true,
+	RenderCaustics:           false,
+	RenderColors:             true,
+	RenderLights:             true,
+	RenderOcclusion:          true,
 	RenderReflections:        true,
 	RenderRefractions:        true,
-	Width:                    1600,
-	Height:                   900,
-	EdgeDetechThreshold:      0.7,
-	AntialiasSamples:         8,
+	SamplerLimit:             16,
 	TransparentColor:         Vector{0, 0, 0, 0},
-	Percentage:               100,
+	Width:                    1600,
 }
 
 var GlobalConfig = Config{}

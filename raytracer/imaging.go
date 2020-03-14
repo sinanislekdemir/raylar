@@ -25,7 +25,7 @@ func renderPixel(scene *Scene, x, y int) {
 	}
 
 	pixel.Depth = bestHit.Dist
-	pixel.Color = bestHit.render(scene, 0)
+	pixel.Color = bestHit.render(scene, 0, Vector{})
 
 	if bestHit.Triangle != nil {
 		if GlobalConfig.RenderReflections && bestHit.Triangle.Material.Glossiness > 0 {

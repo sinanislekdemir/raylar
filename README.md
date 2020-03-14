@@ -18,6 +18,7 @@ install: _you need golang to install_
 - [x] Basic Reflections
 - [x] Bump Mapping
 - [x] Alpha Channel
+- [X] Environment Map
 
 ## Stages of rendering (without Caustics)
 
@@ -37,14 +38,20 @@ install: _you need golang to install_
 
 ![kitchen_full](https://www.islekdemir.com/04_kitchen_ao_color_ref_light.png)
 
+
+### Environment Map
+
+![kitchen_full](https://www.islekdemir.com/environment_map.png)
+
+
 ![residential](https://www.islekdemir.com/residental.png)
 
 ![metro_int](https://www.islekdemir.com/mmetro.png)
 
-(Scene can be downloaded from [https://www.islekdemir.com/buddha.tar.gz](https://www.islekdemir.com/buddha.tar.gz))
 
 ## Happy Buddha Example (1088700 triangles in 1h55m37s 3200x1800 in January 2020, only 9 minutes in March 2020)
 (This is a raw cropped image - No after-effects applied)
+(Scene can be downloaded from [https://www.islekdemir.com/buddha.tar.gz](https://www.islekdemir.com/buddha.tar.gz))
 
 ![budha](https://www.islekdemir.com/buddha_new.jpg)
 

@@ -2,14 +2,19 @@ package raytracer
 
 import (
 	"encoding/json"
+	"image"
 	_ "image/jpeg" // fuck you go-linter
 	_ "image/png"  // fuck you go-linter
 	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	"github.com/cheggaaa/pb"
 )
+
+var EnvironmentMap [][]Vector
+var hasEnvironmentMap bool
 
 // Light -
 type Light struct {
@@ -66,7 +71,7 @@ type Scene struct {
 }
 
 // Init scene
-func (s *Scene) Init(sceneFile string, configFile string) error {
+func (s *Scene) Init(sceneFile, configFile, environmentMap string) error {
 	log.Print("Initializing the scene")
 	if configFile == "" {
 		log.Print("No config set, setting defaults")
@@ -77,7 +82,45 @@ func (s *Scene) Init(sceneFile string, configFile string) error {
 			return err
 		}
 	}
+	if environmentMap != "" {
+		s.loadEnvironmentMap(environmentMap)
+	}
 	return s.loadJSON(sceneFile)
+}
+
+func (s *Scene) loadEnvironmentMap(mapFilename string) {
+	imageFile, err := os.Open(mapFilename)
+	if err != nil {
+		log.Printf("Environment Map [%s] can't be opened\n", mapFilename)
+		imageFile.Close() // defer has over-head
+		return
+	}
+	src, _, err := image.Decode(imageFile)
+	if err != nil {
+		log.Printf("Error reading image file [%s]: [%s]\n", mapFilename, err.Error())
+		imageFile.Close()
+		return
+	}
+
+	imgBounds := src.Bounds().Max
+	EnvironmentMap = make([][]Vector, imgBounds.X)
+	for i := 0; i < imgBounds.X; i++ {
+		EnvironmentMap[i] = make([]Vector, imgBounds.Y)
+		for j := 0; j < imgBounds.Y; j++ {
+			r, g, b, a := src.At(i, j).RGBA()
+			r, g, b, a = r>>8, g>>8, b>>8, a>>8
+
+			result := Vector{
+				float64(r) / 255,
+				float64(g) / 255,
+				float64(b) / 255,
+				float64(a) / 255,
+			}
+			EnvironmentMap[i][j] = result
+		}
+	}
+	imageFile.Close()
+	hasEnvironmentMap = true
 }
 
 func (s *Scene) loadJSON(jsonFile string) error {

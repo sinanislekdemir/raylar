@@ -18,6 +18,7 @@ func main() {
 	sceneFile := flag.String("scene", "scene.json", "Scene File JSON")
 	configFile := flag.String("config", "", "Scene Config JSON")
 	outputFilename := flag.String("output", "awesome.png", "Render output image filename")
+	environmentMap := flag.String("environment", "", "Environment map image file for infinite reflections")
 	percent := flag.Int("percent", 100, "Render completion percentage")
 	size := flag.String("size", "", "width x height: Eg: 1600x900")
 	left := flag.Int("left", 0, "Left X")
@@ -36,6 +37,7 @@ func main() {
 		fmt.Println("--profile               : Turn on profiling for golang")
 		fmt.Println("--size <width>x<height> : Set width x height explicitly, overwriting config. 1600x900 eg.")
 		fmt.Println("--createconfig          : Create a default config.json to modify scene parameters")
+		fmt.Println("--environment           : Environment map image file for infinite reflections")
 		os.Exit(0)
 	}
 	if outputFilename == nil {
@@ -58,7 +60,7 @@ func main() {
 		log.Printf("Created config.json")
 		os.Exit(0)
 	}
-	err := s.Init(*sceneFile, *configFile)
+	err := s.Init(*sceneFile, *configFile, *environmentMap)
 	if err != nil {
 		log.Fatal(err.Error())
 		os.Exit(128)

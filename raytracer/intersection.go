@@ -150,9 +150,18 @@ func (i *Intersection) getNormal() {
 	}
 }
 
-func (i *Intersection) render(scene *Scene, depth int) Vector {
+func (i *Intersection) render(scene *Scene, depth int, parentNormal Vector) Vector {
 	if !i.Hit {
-		return GlobalConfig.TransparentColor
+		if depth == 0 || !hasEnvironmentMap {
+			return GlobalConfig.TransparentColor
+		}
+		u := math.Atan2(parentNormal[0], parentNormal[1])/(2*math.Pi) + 0.5
+		v := parentNormal[2]*0.5 + 0.5
+		w := float64(len(EnvironmentMap))
+		h := float64(len(EnvironmentMap[0]))
+		pixelX := int(w * u)
+		pixelY := int(h - h*v)
+		return EnvironmentMap[pixelX][pixelY]
 	}
 	if depth >= GlobalConfig.MaxReflectionDepth {
 		return i.getColor()
@@ -248,7 +257,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 			go func(scene *Scene, intersection *Intersection, dir Vector, depth int, colChan chan Vector) {
 				dir = reflectVector(intersection.RayDir, dir)
 				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
-				colChan <- target.render(scene, depth)
+				colChan <- target.render(scene, depth, i.IntersectionNormal)
 			}(scene, i, dirs[m], depth+1, colChan)
 		}
 		for m := 0; m < len(dirs); m++ {
@@ -272,7 +281,7 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 			go func(scene *Scene, intersection *Intersection, dir Vector, depth int, colChan chan Vector) {
 				dir = refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
 				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
-				colChan <- target.render(scene, depth)
+				colChan <- target.render(scene, depth, i.IntersectionNormal)
 			}(scene, i, dirs[m], depth+1, colChan)
 		}
 		for m := 0; m < len(dirs); m++ {
@@ -298,11 +307,6 @@ func (i *Intersection) getDirectLight(scene *Scene, depth int) Vector {
 }
 
 func (i *Intersection) getColor() Vector {
-	if !i.Hit {
-		return Vector{
-			0, 0, 0, 1,
-		}
-	}
 	if !GlobalConfig.RenderColors {
 		return Vector{
 			1, 1, 1, 1,
