@@ -218,7 +218,7 @@ func raycastObjectIntersect(object *Object, rayStart, rayDir *Vector) (intersect
 func raycastSceneIntersect(scene *Scene, position, ray Vector) Intersection {
 	position = addVector(position, scaleVector(ray, GlobalConfig.RayCorrection))
 	intersect := raycastObjectIntersect(scene.MasterObject, &position, &ray)
-
+	intersect.RayDir = ray
 	if !intersect.Hit {
 		return intersect
 	}

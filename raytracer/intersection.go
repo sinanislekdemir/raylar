@@ -150,15 +150,15 @@ func (i *Intersection) getNormal() {
 	}
 }
 
-func (i *Intersection) render(scene *Scene, depth int, parentNormal Vector) Vector {
+func (i *Intersection) render(scene *Scene, depth int) Vector {
 	if !i.Hit {
-		if depth == 0 || !hasEnvironmentMap {
+		if !hasEnvironmentMap {
 			return GlobalConfig.TransparentColor
 		}
-		u := math.Atan2(parentNormal[0], parentNormal[1])/(2*math.Pi) + 0.5
-		v := parentNormal[2]*0.5 + 0.5
-		w := float64(len(EnvironmentMap))
-		h := float64(len(EnvironmentMap[0]))
+		u := math.Atan2(i.RayDir[0], i.RayDir[1])/(2*math.Pi) + 0.5
+		v := i.RayDir[2]*0.5 + 0.5
+		w := float64(len(EnvironmentMap)) - 1
+		h := float64(len(EnvironmentMap[0])) - 1
 		pixelX := int(w * u)
 		pixelY := int(h - h*v)
 		return EnvironmentMap[pixelX][pixelY]
@@ -257,7 +257,7 @@ func (i *Intersection) render(scene *Scene, depth int, parentNormal Vector) Vect
 			go func(scene *Scene, intersection *Intersection, dir Vector, depth int, colChan chan Vector) {
 				dir = reflectVector(intersection.RayDir, dir)
 				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
-				colChan <- target.render(scene, depth, i.IntersectionNormal)
+				colChan <- target.render(scene, depth)
 			}(scene, i, dirs[m], depth+1, colChan)
 		}
 		for m := 0; m < len(dirs); m++ {
@@ -281,7 +281,7 @@ func (i *Intersection) render(scene *Scene, depth int, parentNormal Vector) Vect
 			go func(scene *Scene, intersection *Intersection, dir Vector, depth int, colChan chan Vector) {
 				dir = refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
 				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
-				colChan <- target.render(scene, depth, i.IntersectionNormal)
+				colChan <- target.render(scene, depth)
 			}(scene, i, dirs[m], depth+1, colChan)
 		}
 		for m := 0; m < len(dirs); m++ {
