@@ -22,19 +22,20 @@ func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *
 	}
 
 	if light.Samples == nil {
-		light.Samples = sampleSphere(0.5, GlobalConfig.LightSampleCount)
+		light.Samples = sampleSphere(4999999999.95, GlobalConfig.LightSampleCount)
 	}
 
 	totalHits := 0.0
 	totalLight := Vector{}
 
 	for i := range light.Samples {
-		rayStart := scaleVector(lightD, 999999999999)
+		rayStart := scaleVector(lightD, 99999999999)
 		rayStart = addVector(rayStart, intersection.Intersection)
 		rayStart = addVector(rayStart, light.Samples[i])
-		dir := normalizeVector(subVector(intersection.Intersection, rayStart))
 
-		shortestIntersection = raycastSceneIntersect(scene, rayStart, dir)
+		dir := normalizeVector(subVector(rayStart, intersection.Intersection))
+
+		shortestIntersection = raycastSceneIntersect(scene, intersection.Intersection, dir)
 		if (shortestIntersection.Triangle != nil && shortestIntersection.Triangle.id == intersection.Triangle.id) || shortestIntersection.Dist < DIFF {
 			if !sameSideTest(intersection.IntersectionNormal, shortestIntersection.IntersectionNormal, 0) {
 				return

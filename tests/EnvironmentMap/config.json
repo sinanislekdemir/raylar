@@ -2,7 +2,7 @@
     "sampler_limit": 32,
     "light_sample_count": 64,
     "caustics_samples": 10,
-    "exposure": 0.0002,
+    "exposure": 0.0001,
     "max_reflection_depth": 4,
     "ray_correction": 0.002,
     "occlusion_rate": 0.6,
