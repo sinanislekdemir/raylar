@@ -195,7 +195,7 @@ func raycastNodeIntersect(rayStart, rayDir *Vector, node *Node, intersection *In
 					continue
 				}
 			}
-			if dist > 0 && (intersection.Dist == -1 || dist < intersection.Dist) {
+			if dist > DIFF && (intersection.Dist == -1 || dist < intersection.Dist) {
 				intersection.Hit = true
 				intersection.IntersectionNormal = *normal
 				intersection.Intersection = *intersectionPoint

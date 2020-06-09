@@ -225,7 +225,13 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 		color[2] * light[2],
 		pAlpha,
 	}
-	dirs := make([]Vector, 0, int(math.Floor(i.Triangle.Material.Roughness*10)))
+
+	sampleCount := 1
+	if i.Triangle.Material.Roughness > 0 && GlobalConfig.AntialiasSamples > 0 {
+		sampleCount = GlobalConfig.AntialiasSamples
+	}
+
+	dirs := make([]Vector, 0, sampleCount)
 
 	// When light is too shiny, we have to limit color to white as it can't exceed white.
 	color = limitVector(color, 1)
@@ -240,11 +246,8 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 			// it the roughness it needs.
 			dirs = append(dirs, i.IntersectionNormal)
 		} else {
-			numNormals := int(math.Floor(i.Triangle.Material.Roughness * 10))
-			if numNormals > 0 {
-				dirSamples := createSamples(i.IntersectionNormal, numNormals, 1-i.Triangle.Material.Roughness)
-				dirs = append(dirs, dirSamples...)
-			}
+			dirSamples := createSamples(i.IntersectionNormal, sampleCount, 1-i.Triangle.Material.Roughness)
+			dirs = append(dirs, dirSamples...)
 		}
 	}
 
@@ -278,8 +281,8 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 		collColor := Vector{}
 		colChan := make(chan Vector, len(dirs))
 		for m := range dirs {
-			go func(scene *Scene, intersection *Intersection, dir Vector, depth int, colChan chan Vector) {
-				dir = refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
+			go func(scene *Scene, intersection *Intersection, normal Vector, depth int, colChan chan Vector) {
+				dir := refractVector(intersection.RayDir, normal, intersection.Triangle.Material.IndexOfRefraction)
 				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
 				colChan <- target.render(scene, depth)
 			}(scene, i, dirs[m], depth+1, colChan)

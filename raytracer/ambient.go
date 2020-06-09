@@ -2,19 +2,24 @@ package raytracer
 
 // Calculate light reflecting from other objects
 func ambientLightCalc(scene *Scene, intersection *Intersection, samples []Intersection, totalDirs int) (result float64) {
-	totalHits := 0.0
+	totalDist := 0.0
 	rad := scene.ShortRadius
 	if GlobalConfig.AmbientRadius > 0 {
 		rad = GlobalConfig.AmbientRadius
 	}
+	totalDistLimit := rad * float64(totalDirs)
 	for i := 0; i < len(samples); i++ {
-		if samples[i].Dist < rad {
-			totalHits++
+		if samples[i].Dist > rad {
+			totalDist += rad
+		} else {
+			totalDist += samples[i].Dist
 		}
 	}
-	result = 1.0 - (totalHits / float64(totalDirs))
-
-	return result
+	totalDist += (float64(totalDirs-len(samples)) * rad)
+	if len(samples) == 0 {
+		return 1.0
+	}
+	return totalDist / totalDistLimit
 }
 
 func ambientColor(scene *Scene, intersection *Intersection, samples []Intersection, totalDirs int) (result Vector) {

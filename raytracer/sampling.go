@@ -30,12 +30,14 @@ func createSamples(normal Vector, limit int, shifting float64) []Vector {
 
 	result := make([]Vector, 0, limit)
 	result = append(result, normal)
+	hit := 0
 
 	for i := range sampleCache[index] {
 		if sameSideTest(sampleCache[index][i], normal, shifting) {
 			result = append(result, sampleCache[index][i])
-			if len(result) == limit {
-				break
+			hit++
+			if hit == limit {
+				return result
 			}
 		}
 	}
