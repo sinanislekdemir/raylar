@@ -6,7 +6,7 @@ import (
 
 // Triangle definition
 // raycasting is already expensive and trying to calculate the triangle
-// in each raycast makes it harder. So we are simplifying triangle definition
+// in each raycast makes it harder. So we are simplifying triangle definition.
 type Triangle struct {
 	id       int64
 	P1       Vector
@@ -23,7 +23,7 @@ type Triangle struct {
 	Smooth   bool
 }
 
-// Intersection defines the ratcast triangle intersection result
+// Intersection defines the ratcast triangle intersection result.
 type Intersection struct {
 	Hit                bool
 	Triangle           *Triangle

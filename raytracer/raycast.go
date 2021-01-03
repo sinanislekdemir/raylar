@@ -1,12 +1,12 @@
 package raytracer
 
-// DIFF -
+// DIFF floating point precision is a killing me.
 const DIFF = 0.000000001
 
-// MDIFF -
+// MDIFF Imagine a CPU with no dangling float precision.
 const MDIFF = -0.000000001
 
-// ScreenToWorld -
+// ScreenToWorld conversion.
 func screenToWorld(x, y, width, height int, camera Vector, proj, view Matrix) (rayDir Vector) {
 	var xF, yF float64
 	xF = (2.0*float64(x))/float64(width) - 1.0

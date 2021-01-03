@@ -4,15 +4,13 @@ import (
 	"math"
 )
 
-// Vector definition
+// Vector definition.
 type Vector [4]float64
 
 func sameSideTest(v1, v2 Vector, shifting float64) bool {
 	return dot(v1, v2)-shifting > -DIFF
 }
 
-// subVector -
-// substract vector v2 from v1
 func subVector(v1, v2 Vector) Vector {
 	return Vector{
 		v1[0] - v2[0],
@@ -38,6 +36,17 @@ func addVector(v1, v2 Vector) Vector {
 		v1[2] + v2[2],
 		v1[0] + v2[0],
 	}
+}
+
+func addVectors(vList ...Vector) Vector {
+	total := vList[0]
+	for i, v := range vList {
+		if i == 0 {
+			continue
+		}
+		total = addVector(total, v)
+	}
+	return total
 }
 
 func limitVector(v Vector, factor float64) Vector {
@@ -70,7 +79,6 @@ func scaleVector(v Vector, factor float64) Vector {
 	}
 }
 
-// crossProduct - v1 X v2
 func crossProduct(v1, v2 Vector) Vector {
 	return Vector{
 		v1[1]*v2[2] - v1[2]*v2[1],
@@ -103,7 +111,6 @@ func pdot(v1, v2 *Vector) float64 {
 	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
 }
 
-// combine -
 func combine(v1, v2 Vector, f1, f2 float64) Vector {
 	x := (f1 * v1[0]) + (f2 * v2[0])
 	y := (f1 * v1[1]) + (f2 * v2[1])
@@ -120,7 +127,6 @@ func pcombine(v1, v2 *Vector, f1, f2 float64) *Vector {
 	return &Vector{x, y, z, w}
 }
 
-// normalizeVector -
 func pnormalizeVector(v *Vector) *Vector {
 	vn := pvectorNorm(v)
 	if vn == 0 {
@@ -149,7 +155,6 @@ func normalizeVector(v Vector) Vector {
 	}
 }
 
-// vectorTransform -
 func vectorTransform(v Vector, m Matrix) Vector {
 	var result Vector
 	result[0] = v[0]*m[0][0] + v[1]*m[1][0] + v[2]*m[2][0] + v[3]*m[3][0]
@@ -159,7 +164,6 @@ func vectorTransform(v Vector, m Matrix) Vector {
 	return result
 }
 
-// vectorDistance -
 func vectorDistance(v1, v2 Vector) float64 {
 	diff := subVector(v2, v1)
 	return vectorLength(diff)
@@ -179,7 +183,7 @@ func absVector(v Vector) Vector {
 	}
 }
 
-// barycentricCoordinates is a hell of a thing
+// barycentricCoordinates is a hell of a thing.
 func barycentricCoordinates(v1, v2, v3, p Vector) (u, v, w float64, success bool) {
 	var a1, a2 int64
 	var n, e1, e2, pt Vector
@@ -235,7 +239,7 @@ func calculateBounds(vlist []Vector) (min, max Vector) {
 	return
 }
 
-// TODO: Refactor
+// TODO: Refactor.
 func localToAbsoluteList(vertices []Vector, matrix Matrix) []Vector {
 	result := make([]Vector, len(vertices))
 	for i := 0; i < len(vertices); i++ {
@@ -265,7 +269,6 @@ func refractVector(v, n Vector, ior float64) Vector {
 	k := 1.0 - ior*ior*(1.0-nDotI*nDotI)
 	if k < 0 {
 		return Vector{}
-	} else {
-		return subVector(scaleVector(v, ior), scaleVector(n, (ior*nDotI+math.Sqrt(k))))
 	}
+	return subVector(scaleVector(v, ior), scaleVector(n, (ior*nDotI+math.Sqrt(k))))
 }

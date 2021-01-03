@@ -8,6 +8,19 @@ import (
 	"math"
 )
 
+const sunDist = 99999999999.00
+const sunRadius = 4999999999.95
+
+func isShortestIntersection(inter *Intersection, sInter *Intersection) bool {
+	return (sInter.Triangle != nil && sInter.Triangle.id == inter.Triangle.id) || sInter.Dist < DIFF
+}
+
+func isFlatGlass(inter *Intersection, sInter *Intersection) bool {
+	return (sInter.Hit && sInter.Triangle != nil) &&
+		(sInter.Triangle.id != inter.Triangle.id) && (sInter.Triangle.Material.Transmission > 0)
+	//  && (!sInter.Triangle.Smooth)
+}
+
 func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *Light, depth int) (result Vector) {
 	var shortestIntersection Intersection
 	if !intersection.Hit {
@@ -22,21 +35,18 @@ func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *
 	}
 
 	if light.Samples == nil {
-		light.Samples = sampleSphere(4999999999.95, GlobalConfig.LightSampleCount)
+		light.Samples = sampleSphere(sunRadius, GlobalConfig.LightSampleCount)
 	}
 
 	totalHits := 0.0
 	totalLight := Vector{}
 
 	for i := range light.Samples {
-		rayStart := scaleVector(lightD, 99999999999)
-		rayStart = addVector(rayStart, intersection.Intersection)
-		rayStart = addVector(rayStart, light.Samples[i])
-
+		rayStart := addVectors(scaleVector(lightD, sunDist), intersection.Intersection, light.Samples[i])
 		dir := normalizeVector(subVector(rayStart, intersection.Intersection))
 
 		shortestIntersection = raycastSceneIntersect(scene, intersection.Intersection, dir)
-		if (shortestIntersection.Triangle != nil && shortestIntersection.Triangle.id == intersection.Triangle.id) || shortestIntersection.Dist < DIFF {
+		if isShortestIntersection(intersection, &shortestIntersection) {
 			if !sameSideTest(intersection.IntersectionNormal, shortestIntersection.IntersectionNormal, 0) {
 				return
 			}
@@ -54,7 +64,7 @@ func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *
 		}
 
 		// Let things pass if this is a regular glass
-		if (shortestIntersection.Hit && shortestIntersection.Triangle != nil) && (shortestIntersection.Triangle.id != intersection.Triangle.id) && (shortestIntersection.Triangle.Material.Transmission > 0) && (!shortestIntersection.Triangle.Smooth) {
+		if isFlatGlass(intersection, &shortestIntersection) {
 			col := shortestIntersection.getColor()
 			lColor := Vector{
 				light.Color[0] * col[0],
@@ -84,7 +94,7 @@ func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *
 }
 
 // Calculate light for given light source.
-// Result will be used to calculate "avarage" of the pixel color
+// Result will be used to calculate "avarage" of the pixel color.
 func calculateLight(scene *Scene, intersection *Intersection, light *Light, depth int) (result Vector) {
 	if !intersection.Hit {
 		return
@@ -137,7 +147,7 @@ func calculateLight(scene *Scene, intersection *Intersection, light *Light, dept
 	}
 
 	// Let things pass if this is a regular glass
-	if (shortestIntersection.Hit && shortestIntersection.Triangle != nil) && (shortestIntersection.Triangle.id != intersection.Triangle.id) && (shortestIntersection.Triangle.Material.Transmission > 0) && (!shortestIntersection.Triangle.Smooth) {
+	if isFlatGlass(intersection, &shortestIntersection) {
 		col := shortestIntersection.getColor()
 		lColor := Vector{
 			light.Color[0] * col[0],

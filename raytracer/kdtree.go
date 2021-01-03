@@ -2,10 +2,12 @@ package raytracer
 
 import "math"
 
-// BoundingBox -
+const cutOffTriangleCount = 10000
+
+// BoundingBox definition.
 type BoundingBox [2]Vector
 
-// Node for KDTree
+// Node for KDTree.
 type Node struct {
 	Triangles     []Triangle
 	TriangleCount int
@@ -48,20 +50,20 @@ func (b *BoundingBox) longestAxis() int {
 	return result
 }
 
-func (b *BoundingBox) center() Vector {
-	return Vector{
-		(b[1][0] - b[0][0]) / 2.0,
-		(b[1][1] - b[0][1]) / 2.0,
-		(b[1][2] - b[0][2]) / 2.0,
-		1,
-	}
-}
+// func (b *BoundingBox) center() Vector {
+// 	return Vector{
+// 		(b[1][0] - b[0][0]) / 2.0,
+// 		(b[1][1] - b[0][1]) / 2.0,
+// 		(b[1][2] - b[0][2]) / 2.0,
+// 		1,
+// 	}
+// }
 
-func (b *BoundingBox) inside(v Vector) bool {
-	return (v[0]+DIFF >= b[0][0] && v[0]-DIFF <= b[1][0] &&
-		v[1]+DIFF >= b[0][1] && v[1]-DIFF <= b[1][1] &&
-		v[2]+DIFF >= b[0][2] && v[2]-DIFF <= b[1][2])
-}
+// func (b *BoundingBox) inside(v Vector) bool {
+// 	return (v[0]+DIFF >= b[0][0] && v[0]-DIFF <= b[1][0] &&
+// 		v[1]+DIFF >= b[0][1] && v[1]-DIFF <= b[1][1] &&
+// 		v[2]+DIFF >= b[0][2] && v[2]-DIFF <= b[1][2])
+// }
 
 func (n *Node) getBoundingBox() *BoundingBox {
 	if n.Triangles == nil || len(n.Triangles) == 0 {
@@ -136,7 +138,7 @@ func generateNode(tris *[]Triangle, depth int) (result Node) {
 
 	matches := 0
 	ratio := true
-	if len(result.Triangles) < 10000 {
+	if len(result.Triangles) < cutOffTriangleCount {
 		for i := range leftTris {
 			for j := range rightTris {
 				if leftTris[i].equals(rightTris[j]) {

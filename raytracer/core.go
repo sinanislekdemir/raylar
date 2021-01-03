@@ -14,40 +14,28 @@ import (
 	"github.com/cheggaaa/pb"
 )
 
-// Render -
-func Render(scene *Scene, left, right, top, bottom, percent int, size *string) error {
+func getWidthHeight(size string) (int, int, error) {
 	var err error
 	width := GlobalConfig.Width
 	height := GlobalConfig.Height
-	if size != nil && strings.Contains(*size, "x") {
-		log.Printf("Set size to %s", *size)
-		split := strings.Split(*size, "x")
+	if strings.Contains(size, "x") {
+		log.Printf("Set size to %s", size)
+		split := strings.Split(size, "x")
 		width, err = strconv.Atoi(split[0])
 		if err != nil {
-			return err
+			return 0, 0, err
 		}
 		height, err = strconv.Atoi(split[1])
 		if err != nil {
-			return err
+			return 0, 0, err
 		}
 	}
-	log.Printf("Start rendering scene\n")
-	scene.prepare(width, height)
-	start := time.Now()
+	return width, height, nil
+}
 
-	upLeft := image.Point{0, 0}
-	log.Printf("Initial rendering: %d x %d\n", width, height)
-	lowRight := image.Point{width, height}
-
-	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
-
-	// Set color for each pixel.
-
+func getPixelList(width, height, left, right, top, bottom, percent int) (int, []int) {
 	actualWidth := width
 	actualHeight := height
-	scene.Width = width
-	scene.Height = height
-
 	if right+left > 0 {
 		actualWidth = right - left
 		actualHeight = bottom - top
@@ -55,22 +43,49 @@ func Render(scene *Scene, left, right, top, bottom, percent int, size *string) e
 
 	totalPixels := actualWidth * actualHeight
 
-	pixellist := make([]int, totalPixels)
+	pixelList := make([]int, totalPixels)
 	for i := 0; i < totalPixels; i++ {
-		pixellist[i] = i
+		pixelList[i] = i
 	}
+	rand.Shuffle(totalPixels, func(i, j int) { pixelList[i], pixelList[j] = pixelList[j], pixelList[i] })
 
-	rand.Shuffle(totalPixels, func(i, j int) { pixellist[i], pixellist[j] = pixellist[j], pixellist[i] })
+	to := percent * totalPixels / 100
 	if percent < 100 {
-		to := percent * totalPixels / 100
-		pixellist = pixellist[:to]
+		pixelList = pixelList[:to]
 		totalPixels = to
 	}
+	return totalPixels, pixelList
+}
+
+// Render the scene, main processor.
+func Render(scene *Scene, left, right, top, bottom, percent int, size *string) error {
+	width, height, err := getWidthHeight(*size)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Start rendering scene\n")
+	scene.prepare(width, height)
+	start := time.Now()
+
+	upLeft := image.Point{X: 0, Y: 0}
+	log.Printf("Initial rendering: %d x %d\n", width, height)
+	lowRight := image.Point{X: width, Y: height}
+
+	img := image.NewRGBA(image.Rectangle{Min: upLeft, Max: lowRight})
+
+	// Set color for each pixel.
+
+	scene.Width = width
+	scene.Height = height
+
+	totalPixels, pixellist := getPixelList(width, height, left, right, top, bottom, percent)
+
 	bar := pb.StartNew(totalPixels)
 
 	for i := 0; i < totalPixels; i++ {
-		y := int(math.Floor(float64(pixellist[i])/float64(actualWidth))) + top
-		x := (pixellist[i] % actualWidth) + left
+		y := int(math.Floor(float64(pixellist[i])/float64(width))) + top
+		x := (pixellist[i] % width) + left
 		renderPixel(scene, x, y)
 		bar.Increment()
 	}

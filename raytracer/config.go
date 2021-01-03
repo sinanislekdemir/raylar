@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// Config keeps Raytracer Configuration
+// Config keeps Raytracer Configuration.
 type Config struct {
 	AmbientColorSharingRatio float64 `json:"ambient_color_ratio"`
 	AmbientRadius            float64 `json:"ambient_occlusion_radius"`
@@ -35,6 +35,8 @@ type Config struct {
 	Percentage               int
 }
 
+// DEFAULT configuration parameters.
+// These are likely incorrect :D.
 var DEFAULT = Config{
 	// Default Config Settings
 	AmbientColorSharingRatio: 0.5,
@@ -63,9 +65,12 @@ var DEFAULT = Config{
 	Width:                    1600,
 }
 
+// GlobalConfig is reachable from all app context
+// I know that Globals are evil but believe me it's better to have it in global
+// in this application.
 var GlobalConfig = Config{}
 
-// LoadConfig file for the render
+// LoadConfig file for the render.
 func loadConfig(jsonFile string) error {
 	var config Config
 	log.Printf("Loading configuration from %s", jsonFile)
@@ -81,5 +86,17 @@ func loadConfig(jsonFile string) error {
 		return err
 	}
 	GlobalConfig = config
+	return nil
+}
+
+// CreateConfig file.
+func CreateConfig(jsonfile string) error {
+	file, _ := json.MarshalIndent(DEFAULT, "", " ")
+	ferr := ioutil.WriteFile(jsonfile, file, 0600)
+	if ferr != nil {
+		log.Fatal(ferr.Error())
+		return ferr
+	}
+	log.Printf("Created config.json")
 	return nil
 }

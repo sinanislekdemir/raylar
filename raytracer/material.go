@@ -8,12 +8,15 @@ import (
 	"strings"
 )
 
+// Images map to hold image data in memory for repeating images.
 var Images map[string][][]Vector
+
+// BumpMapNormals cache to hold bump map information in memory.
 var BumpMapNormals map[string][][]Vector
 
 type indice [4]int64
 
-// Material -
+// Material definition.
 type Material struct {
 	Color             Vector   `json:"color"`
 	Texture           string   `json:"texture"`

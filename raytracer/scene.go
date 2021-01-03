@@ -13,10 +13,11 @@ import (
 	"github.com/cheggaaa/pb"
 )
 
+// EnvironmentMap cache.
 var EnvironmentMap [][]Vector
 var hasEnvironmentMap bool
 
-// Light -
+// Light structure.
 type Light struct {
 	Position      Vector  `json:"position"`
 	Color         Vector  `json:"color"`
@@ -27,8 +28,8 @@ type Light struct {
 	Samples       []Vector
 }
 
-// Observer -
-type Observer struct {
+// Camera structure.
+type Camera struct {
 	Position    Vector  `json:"position"`
 	Target      Vector  `json:"target"`
 	Up          Vector  `json:"up"`
@@ -56,12 +57,12 @@ type PixelStorage struct {
 	Y                 int
 }
 
-// Scene -
+// Scene main structure.
 type Scene struct {
 	Objects        map[string]*Object `json:"objects"`
 	MasterObject   *Object
-	Lights         []Light    `json:"lights"`
-	Observers      []Observer `json:"observers"`
+	Lights         []Light  `json:"lights"`
+	Cameras        []Camera `json:"observers"`
 	Pixels         [][]PixelStorage
 	Width          int
 	Height         int
@@ -70,7 +71,7 @@ type Scene struct {
 	OutputFilename string
 }
 
-// Init scene
+// Init scene.
 func (s *Scene) Init(sceneFile, configFile, environmentMap string) error {
 	log.Print("Initializing the scene")
 	if configFile == "" {
@@ -188,39 +189,39 @@ func (s *Scene) prepare(width, height int) {
 	log.Printf("Done init scene")
 }
 
-func (scene *Scene) prepareMatrices() {
-	view := viewMatrix(scene.Observers[0].Position, scene.Observers[0].Target, scene.Observers[0].Up)
+func (s *Scene) prepareMatrices() {
+	view := viewMatrix(s.Cameras[0].Position, s.Cameras[0].Target, s.Cameras[0].Up)
 	projectionMatrix := perspectiveProjection(
-		scene.Observers[0].Fov,
-		float64(scene.Width)/float64(scene.Height),
-		scene.Observers[0].Near,
-		scene.Observers[0].Far,
+		s.Cameras[0].Fov,
+		float64(s.Width)/float64(s.Height),
+		s.Cameras[0].Near,
+		s.Cameras[0].Far,
 	)
-	if scene.Observers[0].Projection == nil {
-		scene.Observers[0].Projection = &projectionMatrix
+	if s.Cameras[0].Projection == nil {
+		s.Cameras[0].Projection = &projectionMatrix
 	}
 
-	scene.Observers[0].view = view
-	scene.Observers[0].width = scene.Width
-	scene.Observers[0].height = scene.Height
+	s.Cameras[0].view = view
+	s.Cameras[0].width = s.Width
+	s.Cameras[0].height = s.Height
 }
 
-func (scene *Scene) scanPixels() {
+func (s *Scene) scanPixels() {
 	log.Printf("Scanning pixels on view")
-	bar := pb.StartNew(scene.Width * scene.Height)
-	scene.Pixels = make([][]PixelStorage, scene.Width)
-	for i := 0; i < scene.Width; i++ {
-		scene.Pixels[i] = make([]PixelStorage, scene.Height)
-		for j := 0; j < scene.Height; j++ {
-			scene.Pixels[i][j].Color = GlobalConfig.TransparentColor
+	bar := pb.StartNew(s.Width * s.Height)
+	s.Pixels = make([][]PixelStorage, s.Width)
+	for i := 0; i < s.Width; i++ {
+		s.Pixels[i] = make([]PixelStorage, s.Height)
+		for j := 0; j < s.Height; j++ {
+			s.Pixels[i][j].Color = GlobalConfig.TransparentColor
 		}
 	}
 
-	for i := 0; i < scene.Width; i++ {
-		for j := 0; j < scene.Height; j++ {
-			rayDir := screenToWorld(i, j, scene.Width, scene.Height, scene.Observers[0].Position, *scene.Observers[0].Projection, scene.Observers[0].view)
-			bestHit := raycastSceneIntersect(scene, scene.Observers[0].Position, rayDir)
-			scene.Pixels[i][j].WorldLocation = bestHit
+	for i := 0; i < s.Width; i++ {
+		for j := 0; j < s.Height; j++ {
+			rayDir := screenToWorld(i, j, s.Width, s.Height, s.Cameras[0].Position, *s.Cameras[0].Projection, s.Cameras[0].view)
+			bestHit := raycastSceneIntersect(s, s.Cameras[0].Position, rayDir)
+			s.Pixels[i][j].WorldLocation = bestHit
 			bar.Increment()
 		}
 	}
@@ -258,7 +259,7 @@ func (s *Scene) loadLights() {
 }
 
 // Lights have 0 as w but they are not vectors, they are positions;
-// so we need to set them to 1.0
+// so we need to set them to 1.0.
 func (s *Scene) fixLightPos() {
 	for i := range s.Lights {
 		s.Lights[i].Position[3] = 1.0
@@ -271,7 +272,7 @@ func (s *Scene) flatten() {
 }
 
 // Flatten Scene Objects and move them to root
-// So, we won't have to multiply matrices each time
+// So, we won't have to multiply matrices each time.
 func flattenSceneObjects(objects map[string]*Object) map[string]*Object {
 	result := make(map[string]*Object)
 	for k := range objects {
@@ -288,7 +289,7 @@ func flattenSceneObjects(objects map[string]*Object) map[string]*Object {
 	return result
 }
 
-// TODO: This is a bit heavy, refactor
+// TODO: This is a bit heavy, refactor.
 func (s *Scene) processObjects() {
 	log.Printf("Transform object vertices to absolute and build KDTrees")
 

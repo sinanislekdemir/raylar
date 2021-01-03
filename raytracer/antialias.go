@@ -12,6 +12,7 @@ func getPixel(scene *Scene, x, y int) Vector {
 	if GlobalConfig.AntialiasSamples == 0 {
 		return scene.Pixels[x][y].Color
 	}
+	observer := scene.Cameras[0]
 	sw := scene.Width * 8
 	sh := scene.Height * 8
 	totalColor := Vector{}
@@ -20,8 +21,8 @@ func getPixel(scene *Scene, x, y int) Vector {
 	for _, n := range p[:GlobalConfig.AntialiasSamples] {
 		yi := int(math.Floor(float64(n)/float64(8))) + (y * 8) - 4
 		xi := (n % 8) + (x * 8) - 4
-		rayDir := screenToWorld(xi, yi, sw, sh, scene.Observers[0].Position, *scene.Observers[0].Projection, scene.Observers[0].view)
-		hit := raycastSceneIntersect(scene, scene.Observers[0].Position, rayDir)
+		rayDir := screenToWorld(xi, yi, sw, sh, observer.Position, *observer.Projection, observer.view)
+		hit := raycastSceneIntersect(scene, scene.Cameras[0].Position, rayDir)
 		render := hit.render(scene, 0)
 		totalColor = addVector(totalColor, render)
 		totalHits += 1.0

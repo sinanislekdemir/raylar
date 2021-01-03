@@ -44,6 +44,7 @@ func renderPixel(scene *Scene, x, y int) {
 	scene.Pixels[x][y] = pixel
 }
 
+// Render scene down to the image.
 func renderImage(scene *Scene, image *image.RGBA) {
 	maxDepth := scene.Pixels[0][0].Depth
 

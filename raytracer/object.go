@@ -6,7 +6,7 @@ var totalNodes = 0
 var maxDepth = 0
 var idCounter int64 = 0
 
-// Object -
+// Object definition.
 type Object struct {
 	Vertices  []Vector            `json:"vertices"`
 	Normals   []Vector            `json:"normals"`
@@ -19,7 +19,7 @@ type Object struct {
 	radius    float64
 }
 
-// UnifyTriangles of the object for faster processing
+// UnifyTriangles of the object for faster processing.
 func (o *Object) UnifyTriangles() {
 	for matName := range o.Materials {
 		for indice := range o.Materials[matName].Indices {
@@ -52,7 +52,7 @@ func (o *Object) UnifyTriangles() {
 	o.TexCoords = nil
 }
 
-// KDTree Building
+// KDTree Building.
 func (o *Object) KDTree() {
 	o.Root = generateNode(&o.Triangles, 0)
 }

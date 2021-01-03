@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -12,10 +10,13 @@ import (
 	"github.com/sinanislekdemir/raylar/raytracer"
 )
 
+var buildTime string
+
 func main() {
 	s := raytracer.Scene{}
 
-	sceneFile := flag.String("scene", "scene.json", "Scene File JSON")
+	sceneFile := ""
+
 	configFile := flag.String("config", "", "Scene Config JSON")
 	outputFilename := flag.String("output", "awesome.png", "Render output image filename")
 	environmentMap := flag.String("environment", "", "Environment map image file for infinite reflections")
@@ -29,8 +30,17 @@ func main() {
 	showHelp := flag.Bool("help", false, "Show help!")
 	createConfig := flag.Bool("createconfig", false, "Create config")
 	flag.Parse()
+
+	if flag.NArg() == 0 {
+		sceneFile = "scene.json"
+	} else {
+		sceneFile = flag.Arg(0)
+		if sceneFile == "" {
+			sceneFile = "scene.json"
+		}
+	}
+
 	if showHelp != nil && *showHelp {
-		fmt.Println("--scene <scene.json>    : Scene filename")
 		fmt.Println("--config <config.json>  : Render configurations")
 		fmt.Println("--output <out.png>      : Output image filename")
 		fmt.Println("--percent <percent>     : Render Percentage")
@@ -50,22 +60,32 @@ func main() {
 		_ = pprof.StartCPUProfile(fx)
 		defer pprof.StopCPUProfile()
 	}
+	fmt.Printf("Raylar - Build %s", buildTime)
 	if *createConfig {
-		file, _ := json.MarshalIndent(raytracer.DEFAULT, "", " ")
-		ferr := ioutil.WriteFile("config.json", file, 0644)
-		if ferr != nil {
-			log.Fatal(ferr.Error())
-			os.Exit(1)
+		err := raytracer.CreateConfig("config.json")
+		if err != nil {
+			fmt.Println(err.Error())
 		}
-		log.Printf("Created config.json")
 		os.Exit(0)
 	}
-	err := s.Init(*sceneFile, *configFile, *environmentMap)
+
+	if _, err := os.Stat("config.json"); os.IsNotExist(err) {
+		err := raytracer.CreateConfig("config.json")
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	} else {
+		cf := "config.json"
+		configFile = &cf
+	}
+
+	err := s.Init(sceneFile, *configFile, *environmentMap)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Println(err.Error())
 		os.Exit(128)
 	}
 	log.Printf("Render %d percent of the image", *percent)
 	raytracer.GlobalConfig.Percentage = *percent
 	_ = raytracer.Render(&s, *left, *right, *top, *bottom, *percent, size)
+	os.Exit(0)
 }

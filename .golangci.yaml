@@ -1,0 +1,33 @@
+linters:
+  enable:
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    - varcheck
+    - asciicheck
+    - bodyclose
+    - depguard
+    - dupl
+    - errorlint
+    - exhaustive
+    - exhaustivestruct
+    - gci
+    - gocognit
+    - gocritic
+    - gocyclo
+    - godot
+    - goerr113
+    - gofmt
+    - goheader
+    - goimports
+    - golint
+    - lll
+    - nestif
+  disable:
+    - funlen

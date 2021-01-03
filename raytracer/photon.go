@@ -2,7 +2,7 @@ package raytracer
 
 import "math"
 
-// Photon information to follow
+// Photon information to follow.
 type Photon struct {
 	Location  Vector // You can never be sure!
 	Direction Vector
@@ -10,7 +10,7 @@ type Photon struct {
 	Intensity float64
 }
 
-/// trace a photon's path
+// trace a photon's path.
 func tracePhoton(scene *Scene, photon *Photon, depth int) {
 	if photon.Intensity < DIFF {
 		return
@@ -28,8 +28,8 @@ func tracePhoton(scene *Scene, photon *Photon, depth int) {
 	if dotP < 0 {
 		return
 	}
-	inv_dist_sqr := 1.0 / (rayLength * rayLength)
-	photon.Intensity *= inv_dist_sqr
+	invDistSqr := 1.0 / (rayLength * rayLength)
+	photon.Intensity *= invDistSqr
 	photon.Intensity *= dotP
 
 	trace := scaleVector(photon.Color, photon.Intensity)

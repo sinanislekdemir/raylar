@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-// Matrix definition
+// Matrix definition.
 type Matrix [4]Vector
 
 var identityHmgMatrix = Matrix{
@@ -14,7 +14,7 @@ var identityHmgMatrix = Matrix{
 	Vector{0, 0, 0, 1},
 }
 
-// perspectiveProjection - Create perspective
+// perspectiveProjection - Create perspective.
 func perspectiveProjection(fovy, aspect, near, far float64) Matrix {
 	ymax := near * math.Tan(fovy*math.Pi/360.0)
 	xmax := ymax * aspect
@@ -34,7 +34,7 @@ func perspectiveProjection(fovy, aspect, near, far float64) Matrix {
 	}
 }
 
-// viewMatrix -
+// viewMatrix calculation.
 func viewMatrix(eye, target, up Vector) Matrix {
 	forward := normalizeVector(subVector(target, eye))
 	side := normalizeVector(crossProduct(forward, up))
@@ -50,7 +50,7 @@ func viewMatrix(eye, target, up Vector) Matrix {
 	}
 }
 
-// matrixDeterminant -
+// matrixDeterminant calculation.
 func matrixDeterminant(m Matrix) float64 {
 	a := m[0][0] * matrixDetInternal(m[1][1], m[2][1], m[3][1], m[1][2], m[2][2], m[3][2],
 		m[1][3], m[2][3], m[3][3])
@@ -63,12 +63,12 @@ func matrixDeterminant(m Matrix) float64 {
 	return a - b + c - d
 }
 
-// matrixDetInternal -
+// matrixDetInternal calculation.
 func matrixDetInternal(a1, a2, a3, b1, b2, b3, c1, c2, c3 float64) float64 {
 	return (a1*(b2*c3-b3*c2) - b1*(a2*c3-a3*c2) + c1*(a2*b3-a3*b2))
 }
 
-// adjointMatrix -
+// adjointMatrix calculation.
 func adjointMatrix(m Matrix) Matrix {
 	var a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4 float64
 	var result Matrix
@@ -110,7 +110,7 @@ func adjointMatrix(m Matrix) Matrix {
 	return result
 }
 
-// scaleMatrix -
+// scaleMatrix calculation.
 func scaleMatrix(m Matrix, factor float64) Matrix {
 	var result Matrix
 	for i := 0; i < 4; i++ {
@@ -121,7 +121,7 @@ func scaleMatrix(m Matrix, factor float64) Matrix {
 	return result
 }
 
-// invertMatrix -
+// invertMatrix calculation.
 func invertMatrix(m Matrix) Matrix {
 	det := matrixDeterminant(m)
 	epsilon := 1e-40
@@ -132,7 +132,7 @@ func invertMatrix(m Matrix) Matrix {
 	return scaleMatrix(m2, 1/det)
 }
 
-// multiplyMatrix -
+// multiplyMatrix operation.
 func multiplyMatrix(m1, m2 Matrix) Matrix {
 	var result Matrix
 	result[0][0] = m1[0][0]*m2[0][0] + m1[0][1]*m2[1][0] + m1[0][2]*m2[2][0] + m1[0][3]*m2[3][0]
