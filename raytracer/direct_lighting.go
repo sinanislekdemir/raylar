@@ -17,7 +17,8 @@ func isShortestIntersection(inter *Intersection, sInter *Intersection) bool {
 
 func isFlatGlass(inter *Intersection, sInter *Intersection) bool {
 	return (sInter.Hit && sInter.Triangle != nil) &&
-		(sInter.Triangle.id != inter.Triangle.id) && (sInter.Triangle.Material.Transmission > 0)
+		(sInter.Triangle.id != inter.Triangle.id) && (sInter.Triangle.Material.Transmission > 0) &&
+		(GlobalConfig.RenderRefractions)
 	//  && (!sInter.Triangle.Smooth)
 }
 
@@ -158,7 +159,7 @@ func calculateLight(scene *Scene, intersection *Intersection, light *Light, dept
 
 		intensity := (1 / (shortestIntersection.Dist * shortestIntersection.Dist)) * GlobalConfig.Exposure
 		intensity *= dotP * light.LightStrength * shortestIntersection.Triangle.Material.Transmission
-		if intensity > DIFF {
+		if intensity > DIFF && intensity < light.LightStrength {
 			subLight := Light{
 				Position:      shortestIntersection.Intersection,
 				Color:         lColor,

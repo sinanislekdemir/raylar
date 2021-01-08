@@ -227,9 +227,6 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 	}
 	dirs := make([]Vector, 0, int(math.Floor(i.Triangle.Material.Roughness*10)))
 
-	// When light is too shiny, we have to limit color to white as it can't exceed white.
-	color = limitVector(color, 1)
-
 	// END OF MAIN RENDERING OF THE INTERSECTION
 	// NOW WE DO THE TRACING PART
 
@@ -298,6 +295,8 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 			1,
 		}
 	}
+	// When light is too shiny, we have to limit color to white as it can't exceed white.
+	color = limitVector(color, 1)
 
 	return color
 }

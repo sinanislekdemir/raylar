@@ -71,11 +71,12 @@ func renderImage(scene *Scene, image *image.RGBA) {
 			bar.Increment()
 			pcolor := scene.Pixels[i][j].Color
 			pcolor = getPixelColor(scene, i, j, pcolor)
+			pcolor = limitVector(pcolor, 1.0)
 			colorRGBA := color.RGBA{
-				uint8(math.Floor(pcolor[0] * 255)),
-				uint8(math.Floor(pcolor[1] * 255)),
-				uint8(math.Floor(pcolor[2] * 255)),
-				uint8(math.Floor(pcolor[3] * 255)),
+				R: uint8(math.Floor(pcolor[0] * 255)),
+				G: uint8(math.Floor(pcolor[1] * 255)),
+				B: uint8(math.Floor(pcolor[2] * 255)),
+				A: uint8(math.Floor(pcolor[3] * 255)),
 			}
 			image.Set(i, j, colorRGBA)
 		}

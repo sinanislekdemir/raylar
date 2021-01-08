@@ -29,7 +29,7 @@ func createSamples(normal Vector, limit int, shifting float64) []Vector {
 	index := rand.Int() % 10
 
 	result := make([]Vector, 0, limit)
-	result = append(result, normal)
+	// result = append(result, normal)
 
 	for i := range sampleCache[index] {
 		if sameSideTest(sampleCache[index][i], normal, shifting) {

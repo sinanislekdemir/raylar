@@ -80,7 +80,6 @@ func Render(scene *Scene, left, right, top, bottom, percent int, size *string) e
 	scene.Height = height
 
 	totalPixels, pixellist := getPixelList(width, height, left, right, top, bottom, percent)
-
 	bar := pb.StartNew(totalPixels)
 
 	for i := 0; i < totalPixels; i++ {
