@@ -22,7 +22,8 @@ func ambientColor(scene *Scene, intersection *Intersection, samples []Intersecti
 
 	totalHits := 0.0
 	totalColor := Vector{}
-	for i := 0; i < len(samples); i++ {
+	sampleCount := len(samples)
+	for i := 0; i < sampleCount; i++ {
 		color := samples[i].getColor()
 		if vectorLength(color) < DIFF {
 			continue
@@ -34,7 +35,7 @@ func ambientColor(scene *Scene, intersection *Intersection, samples []Intersecti
 		return Vector{}
 	}
 
-	return scaleVector(totalColor, 1.0/totalHits)
+	return scaleVector(totalColor, 1.0/float64(sampleCount))
 }
 
 func ambientSampling(scene *Scene, intersection *Intersection) []Intersection {

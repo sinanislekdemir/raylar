@@ -71,9 +71,12 @@ def export_object(obj):
             else:
                 material_cache[material.name]["color"] = [1, 1, 1, 1]
             if "Alpha" in inp:
-                material_cache[material.name]["transmission"] = inp[
+                alpha = inp[
                     "Transmission"
-                ].default_value / 2.0
+                ].default_value
+                if alpha > 1.0:
+                    alpha = alpha / 2.0
+                material_cache[material.name]["transmission"] = alpha
             if "IOR" in inp:
                 material_cache[material.name]["index_of_refraction"] = inp[
                     "IOR"

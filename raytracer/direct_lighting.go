@@ -76,7 +76,7 @@ func calculateDirectionalLight(scene *Scene, intersection *Intersection, light *
 
 			intensity := (1 / (shortestIntersection.Dist * shortestIntersection.Dist)) * GlobalConfig.Exposure
 			intensity *= dotP * light.LightStrength * shortestIntersection.Triangle.Material.Transmission
-			if intensity > DIFF {
+			if intensity > DIFF && intensity < light.LightStrength {
 				subLight := Light{
 					Position:      shortestIntersection.Intersection,
 					Color:         lColor,
