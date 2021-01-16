@@ -66,7 +66,7 @@ func main() {
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		os.Exit(0)
+		return
 	}
 
 	if _, err := os.Stat("config.json"); os.IsNotExist(err) {
@@ -82,10 +82,9 @@ func main() {
 	err := s.Init(sceneFile, *configFile, *environmentMap)
 	if err != nil {
 		log.Println(err.Error())
-		os.Exit(128)
+		return
 	}
 	log.Printf("Render %d percent of the image", *percent)
 	raytracer.GlobalConfig.Percentage = *percent
 	_ = raytracer.Render(&s, *left, *right, *top, *bottom, *percent, size)
-	os.Exit(0)
 }

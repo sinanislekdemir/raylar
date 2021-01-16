@@ -1,3 +1,4 @@
 #!/bin/bash
 
-BUILD=`date '+%Y/%m/%d %H:%M:%S'` go build -ldflags "-X main.buildTime=$BUILD" .
+go build -ldflags "-X main.buildTime=$(date +"%Y.%m.%d.%H%M%S")" .
+cp ./raylar /home/sinan/bin/raylar

@@ -83,6 +83,9 @@ func (s *Scene) Init(sceneFile, configFile, environmentMap string) error {
 			return err
 		}
 	}
+	if GlobalConfig.EnvironmentMap != "" && environmentMap == "" {
+		environmentMap = GlobalConfig.EnvironmentMap
+	}
 	if environmentMap != "" {
 		s.loadEnvironmentMap(environmentMap)
 	}
