@@ -31,7 +31,6 @@ type Intersection struct {
 	IntersectionNormal Vector
 	RayStart           Vector
 	RayDir             Vector
-	ObjectName         string
 	Dist               float64
 	Hits               int
 }
@@ -276,7 +275,10 @@ func (i *Intersection) render(scene *Scene, depth int) Vector {
 		colChan := make(chan Vector, len(dirs))
 		for m := range dirs {
 			go func(scene *Scene, intersection *Intersection, dir Vector, depth int, colChan chan Vector) {
-				dir = refractVector(intersection.RayDir, intersection.IntersectionNormal, intersection.Triangle.Material.IndexOfRefraction)
+				dir = refractVector(
+					intersection.RayDir,
+					intersection.IntersectionNormal,
+					intersection.Triangle.Material.IndexOfRefraction)
 				target := raycastSceneIntersect(scene, intersection.Intersection, dir)
 				colChan <- target.render(scene, depth)
 			}(scene, i, dirs[m], depth+1, colChan)
@@ -314,37 +316,38 @@ func (i *Intersection) getColor() Vector {
 
 	material := i.Triangle.Material
 	result := material.Color
-	if material.Texture != "" {
-		if _, ok := Images[material.Texture]; ok {
-			// ok, we have the image. Let's calculate the pixel color;
-			s := i.getTexCoords()
-			// get image size
+	if material.Texture == "" {
+		return result
+	}
+	if _, ok := Images[material.Texture]; ok {
+		// ok, we have the image. Let's calculate the pixel color;
+		s := i.getTexCoords()
+		// get image size
 
-			if s[0] > 1 {
-				s[0] -= math.Floor(s[0])
-			}
-			if s[0] < 0 {
-				s[0] = math.Abs(s[0])
-				s[0] = 1 - (s[0] - math.Floor(s[0]))
-			}
-
-			if s[1] > 1 {
-				s[1] -= math.Floor(s[1])
-			}
-
-			if s[1] < 0 {
-				s[1] = math.Abs(s[1])
-				s[1] = 1 - (s[1] - math.Floor(s[1]))
-			}
-			s[1] = 1 - s[1]
-
-			s[0] -= float64(int64(s[0]))
-			s[1] -= float64(int64(s[1]))
-
-			pixelX := int(float64(len(Images[material.Texture])) * s[0])
-			pixelY := int(float64(len(Images[material.Texture][0])) * s[1])
-			result = Images[material.Texture][pixelX][pixelY]
+		if s[0] > 1 {
+			s[0] -= math.Floor(s[0])
 		}
+		if s[0] < 0 {
+			s[0] = math.Abs(s[0])
+			s[0] = 1 - (s[0] - math.Floor(s[0]))
+		}
+
+		if s[1] > 1 {
+			s[1] -= math.Floor(s[1])
+		}
+
+		if s[1] < 0 {
+			s[1] = math.Abs(s[1])
+			s[1] = 1 - (s[1] - math.Floor(s[1]))
+		}
+		s[1] = 1 - s[1]
+
+		s[0] -= float64(int64(s[0]))
+		s[1] -= float64(int64(s[1]))
+
+		pixelX := int(float64(len(Images[material.Texture])) * s[0])
+		pixelY := int(float64(len(Images[material.Texture][0])) * s[1])
+		result = Images[material.Texture][pixelX][pixelY]
 	}
 	return result
 }

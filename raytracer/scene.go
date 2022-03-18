@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/cheggaaa/pb"
@@ -143,10 +144,9 @@ func (s *Scene) loadJSON(jsonFile string) error {
 	}
 	s.InputFilename = jsonFile
 	log.Printf("Fixing object Ws\n")
-	for name, obj := range s.Objects {
-		fixObjectVectorW(obj)
-		obj.calcRadius()
-		s.Objects[name] = obj
+	for name := range s.Objects {
+		s.Objects[name].fixW()
+		s.Objects[name].calcRadius()
 	}
 
 	log.Printf("Loaded scene in %f seconds\n", time.Since(start).Seconds())
@@ -164,6 +164,7 @@ func (s *Scene) mergeAll() {
 			gigaMesh.Materials[k] = m
 		}
 		gigaMesh.Triangles = append(gigaMesh.Triangles, s.Objects[obj].Triangles...)
+		s.Objects[obj] = nil
 	}
 	gigaMesh.calcRadius()
 	log.Printf("Build KDTree")
@@ -179,13 +180,23 @@ func (s *Scene) prepare(width, height int) {
 	// Order of below calls is important!
 	log.Printf("Init scene")
 	s.flatten()
+	// log.Printf("After flatten")
+	// PrintMemUsage()
 	s.processObjects()
+	// log.Printf("After objects processing")
+	// PrintMemUsage()
 	s.mergeAll()
+	// log.Printf("After mergeall")
+	// PrintMemUsage()
 	s.parseMaterials()
 	s.fixLightPos()
 	s.loadLights()
 	s.prepareMatrices()
+	log.Printf("After parse materials")
+	PrintMemUsage()
 	s.scanPixels()
+	log.Printf("When we prep scene")
+	PrintMemUsage()
 	if GlobalConfig.RenderCaustics {
 		s.buildPhotonMap()
 	}
@@ -219,6 +230,8 @@ func (s *Scene) scanPixels() {
 			s.Pixels[i][j].Color = GlobalConfig.TransparentColor
 		}
 	}
+	log.Println("After pixel storage")
+	PrintMemUsage()
 
 	for i := 0; i < s.Width; i++ {
 		for j := 0; j < s.Height; j++ {
@@ -228,6 +241,8 @@ func (s *Scene) scanPixels() {
 			bar.Increment()
 		}
 	}
+	log.Printf("After pixel raycasts")
+	PrintMemUsage()
 	bar.Finish()
 	log.Printf("Done scanning pixels")
 }
@@ -238,9 +253,6 @@ func (s *Scene) buildPhotonMap() {
 }
 
 func (s *Scene) loadLights() {
-	// for i := range s.Lights {
-	// 	s.Lights[i].HitExceptions =
-	// }
 	for i := range s.MasterObject.Triangles {
 		if !s.MasterObject.Triangles[i].Material.Light {
 			continue
@@ -309,5 +321,27 @@ func (s *Scene) processObjects() {
 		totalNodes = 0
 		maxDepth = 0
 		s.Objects[k] = obj
+	}
+}
+
+// Parse all material images and store them in scene object
+// so we won't have to open and read for each pixel.
+// TODO: Free material image if it is not being used.
+// TODO: This method is complex and has more than one responsibility
+// NOTE: This function assumes that objects are already flattened!
+func (s *Scene) parseMaterials() {
+	log.Printf("Parse material textures\n")
+	scenePath := filepath.Dir(s.InputFilename)
+	BumpMapNormals = make(map[string][][]Vector)
+	Images = make(map[string][][]Vector)
+	for m := range s.MasterObject.Materials {
+		mat := s.MasterObject.Materials[m]
+		if _, ok := Images[mat.Texture]; ok {
+			continue
+		}
+		if mat.Texture != "" {
+			loadImage(scenePath, mat.Texture)
+			loadBumpMap(scenePath, mat.Texture)
+		}
 	}
 }

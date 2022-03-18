@@ -43,6 +43,7 @@ var DEFAULT = Config{
 	AmbientRadius:            2.1,
 	AntialiasSamples:         8,
 	CausticsSamplerLimit:     10000,
+	EnvironmentMap:           "",
 	EdgeDetechThreshold:      0.7,
 	Exposure:                 0.2,
 	Height:                   900,

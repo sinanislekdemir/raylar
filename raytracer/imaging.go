@@ -131,7 +131,8 @@ func getPixelColor(scene *Scene, x, y int, pixelColor Vector) Vector {
 		}
 	}
 
-	check := (maxDepth-minDepth > GlobalConfig.EdgeDetechThreshold) || (maxColor-minColor > GlobalConfig.EdgeDetechThreshold)
+	check := (maxDepth-minDepth > GlobalConfig.EdgeDetechThreshold) ||
+		(maxColor-minColor > GlobalConfig.EdgeDetechThreshold)
 
 	if transparent {
 		check = true

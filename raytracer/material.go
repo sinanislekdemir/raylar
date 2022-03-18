@@ -116,25 +116,3 @@ func loadBumpMap(scenePath, texture string) {
 	}
 	imageFile.Close()
 }
-
-// Parse all material images and store them in scene object
-// so we won't have to open and read for each pixel.
-// TODO: Free material image if it is not being used.
-// TODO: This method is complex and has more than one responsibility
-// NOTE: This function assumes that objects are already flattened!
-func (s *Scene) parseMaterials() {
-	log.Printf("Parse material textures\n")
-	scenePath := filepath.Dir(s.InputFilename)
-	BumpMapNormals = make(map[string][][]Vector)
-	Images = make(map[string][][]Vector)
-	for m := range s.MasterObject.Materials {
-		mat := s.MasterObject.Materials[m]
-		if _, ok := Images[mat.Texture]; ok {
-			continue
-		}
-		if mat.Texture != "" {
-			loadImage(scenePath, mat.Texture)
-			loadBumpMap(scenePath, mat.Texture)
-		}
-	}
-}

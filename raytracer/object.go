@@ -57,7 +57,7 @@ func (o *Object) KDTree() {
 	o.Root = generateNode(&o.Triangles, 0)
 }
 
-func fixObjectVectorW(o *Object) {
+func (o *Object) fixW() {
 	for i := range o.Vertices {
 		o.Vertices[i][3] = 1.0
 	}
@@ -69,7 +69,7 @@ func fixObjectVectorW(o *Object) {
 		o.TexCoords[i][3] = 0.0
 	}
 	for name, obj := range o.Children {
-		fixObjectVectorW(obj)
+		obj.fixW()
 		o.Children[name] = obj
 	}
 }

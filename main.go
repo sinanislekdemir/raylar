@@ -29,6 +29,7 @@ func main() {
 	profiling := flag.Bool("profile", false, "Set 1 for debugging")
 	showHelp := flag.Bool("help", false, "Show help!")
 	createConfig := flag.Bool("createconfig", false, "Create config")
+
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -50,16 +51,19 @@ func main() {
 		fmt.Println("--environment           : Environment map image file for infinite reflections")
 		os.Exit(0)
 	}
+
 	if outputFilename == nil {
 		s.OutputFilename = "out.png"
 	} else {
 		s.OutputFilename = *outputFilename
 	}
+
 	if *profiling {
 		fx, _ := os.Create("profiling.prof")
 		_ = pprof.StartCPUProfile(fx)
 		defer pprof.StopCPUProfile()
 	}
+
 	fmt.Printf("Raylar - Build %s", buildTime)
 	if *createConfig {
 		err := raytracer.CreateConfig("config.json")
