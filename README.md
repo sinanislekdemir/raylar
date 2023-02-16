@@ -6,7 +6,7 @@ install: _you need golang to install_
 
     go install github.com/sinanislekdemir/raylar
 
-![glasses](https://www.islekdemir.com/teapot_1200.png)
+![glasses](https://www.16x4.com/teapot_1200.png)
 
 - [x] Raytracing
   - [x] KD-Tree
@@ -24,36 +24,36 @@ install: _you need golang to install_
 
 ### Ambient Occlusion Only
 
-![ao_kitchen](https://www.islekdemir.com/01_kitchen_ao.png)
+![ao_kitchen](https://www.16x4.com/01_kitchen_ao.png)
 
 ### Ambient Occlusion with Colors
 
-![ao_kitchen_color](https://www.islekdemir.com/02_kitchen_ao_color.png)
+![ao_kitchen_color](https://www.16x4.com/02_kitchen_ao_color.png)
 
 ### AO with Colors and Reflections/Refractions
 
-![ao_kitchen_ref_color](https://www.islekdemir.com/03_kitchen_ao_color_ref.png)
+![ao_kitchen_ref_color](https://www.16x4.com/03_kitchen_ao_color_ref.png)
 
 ### Render with AO + Lights + Colors
 
-![kitchen_full](https://www.islekdemir.com/04_kitchen_ao_color_ref_light.png)
+![kitchen_full](https://www.16x4.com/04_kitchen_ao_color_ref_light.png)
 
 
 ### Environment Map
 
-![kitchen_full](https://www.islekdemir.com/env_map.png)
+![kitchen_full](https://www.16x4.com/env_map.png)
 
 
-![residential](https://www.islekdemir.com/residental.png)
+![residential](https://www.16x4.com/residental.png)
 
-![metro_int](https://www.islekdemir.com/mmetro.png)
+![metro_int](https://www.16x4.com/mmetro.png)
 
 
 ## Happy Buddha Example (1088700 triangles in 1h55m37s 3200x1800 in January 2020, only 9 minutes in March 2020)
 (This is a raw cropped image - No after-effects applied)
-(Scene can be downloaded from [https://www.islekdemir.com/buddha.tar.gz](https://www.islekdemir.com/buddha.tar.gz))
+(Scene can be downloaded from [https://www.islekdemir.com/buddha.tar.gz](https://www.16x4.com/buddha.tar.gz))
 
-![budha](https://www.islekdemir.com/buddha_new.jpg)
+![budha](https://www.16x4.com/buddha_new.jpg)
 
     2020/01/27 17:57:06 Loading configuration from config.json
     2020/01/27 17:57:06 Unmarshal JSON
